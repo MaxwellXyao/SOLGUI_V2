@@ -1,34 +1,75 @@
 #include"SOLGUI_Include.h"
-#include"SOLGUI_Font6x8.h"
 #include<stdarg.h> 						//支持变长参数
 
+//########################【字库文件】########################
+#include"Font6x8_ASCII.h"
+#include"Font4x6_ASCII.h"
+#include"Font8x8_ASCII.h"
+#include"Font8x10_ASCII.h"
 
+//########################【字库选择】########################
+//---------------------【字库注册】
 
-//----------------【在屏幕上输出字符】
-void SOLGUI_Show_Char(u8 x,u8 y,u8 ch,u8 mode)//显示单个字符（mode：1正常显示，0高亮显示）
+FontInfo _fontInfo_6x8={0x01,6,8,(u8*)_Font6x8};	   	//Font6x8_ASCII
+
+#if FONT4X6_EN==1
+FontInfo _fontInfo_4x6={0x02,4,6,(u8*)_Font4x6};		//Font4x6_ASCII
+#endif
+#if FONT8X8_EN==1
+FontInfo _fontInfo_8x8={0x04,8,8,(u8*)_Font8x8};	   	//Font8x8_ASCII
+#endif
+#if FONT8X10_EN==1
+FontInfo _fontInfo_8x10={0x08,8,10,(u8*)_Font8x10};	   	//Font8x10_ASCII
+#endif
+
+//---------------------【字库选择器】
+FontInfo SOLGUI_SwitchFont(u8 mode)
 {
-	unsigned char temp,t,tl;
-	unsigned char y0=y;
-	ch=ch-' ';
-	for(t=0;t<6;t++)
+	switch(mode)
 	{
-		 temp=_Font6x8[ch][t];
+		case F6X8:
+		case 0:
+		case R6X8:	return(_fontInfo_6x8);
+#if FONT4X6_EN==1
+		case F4X6:
+		case R4X6:	return(_fontInfo_4x6);
+#endif
+#if FONT8X8_EN==1
+		case F8X8:
+		case R8X8:	return(_fontInfo_8x8);
+#endif
+#if FONT8X10_EN==1
+		case F8X10:
+		case R8X10:	return(_fontInfo_8x10);
+#endif
+		default: 	return(_fontInfo_6x8);
+	}
+}
+
+
+//########################【内部使用】########################
+//----------------【在屏幕上输出字符】
+void SOLGUI_PutChar(u32 x,u32 y,u8 ch,u8 mode)//显示单个字符（mode：1正常显示，0高亮显示）
+{
+	u8 temp,m=1,tl,x0=x;
+	s8 t;
+	FontInfo fi=SOLGUI_SwitchFont(mode);
+	m=mode&fi.FontMask;
+//-------------【字符显示】  
+	ch=ch-' ';
+	for(t=fi.FontHeight-1;t>=0;t--)								
+	{	
+		 temp=*(fi.Fontp+ch*fi.FontHeight+t);
 		 for(tl=0;tl<8;tl++)
 		 {
-		 	if(temp&0x80)
-			{
-				SOLGUI_DrawPoint(x,y,mode);
-			}
-			else
-			{
-				SOLGUI_DrawPoint(x,y,!mode);
-			}
+		 	if(temp&0x80) SOLGUI_DrawPoint(x,y,m);
+			else SOLGUI_DrawPoint(x,y,!m);
 			temp<<=1;
-			y++;
-			if((y-y0)==8)
+			x++;
+			if((x-x0)==8)
 			{ 
-				y=y0;
-				x++;
+				x=x0;
+				y++;
 				break;
 			}
 		 }
@@ -37,30 +78,35 @@ void SOLGUI_Show_Char(u8 x,u8 y,u8 ch,u8 mode)//显示单个字符（mode：1正常显示，0
 
 //----------------【在屏幕上输出字符串】
 
-void SOLGUI_Show_String(u8 x,u8 y,u8 *str,u8 mode)	//显示字符串（mode：1正常显示，0高亮显示）
+void SOLGUI_PutString(u32 x,u32 y,const u8 *str,u8 mode)	//显示字符串（mode：1正常显示，0高亮显示）
 {
-	unsigned char j=0;
+	u8 j=0;
+	FontInfo fi=SOLGUI_SwitchFont(mode);
+//-------------【字库选择】
 	while (str[j]!='\0')
 	{		
-		SOLGUI_Show_Char(x,y,str[j],mode);
-		x+=6;
+		SOLGUI_PutChar(x,y,str[j],mode);
+		x+=fi.FontWidth;										
 		j++;
 	}
 }
 
+
+//##############################【API】##############################
 //----------------【在屏幕上格式化输出字符串】
 
-void SOLGUI_printf(u8 x,u8 y,u8 mode,const u8* str,...)
+void SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,...)
 {
 	va_list arp;
-	unsigned char xpp=x;
-	unsigned char f,r,fl=0,l=3,lt;		//默认留3位小数,小数可留0~7位
-	unsigned char i,j,w,lp;
-	unsigned long v;
-	char c, d, s[16], *p;
-	int res, chc, cc,ll;
-	int kh,kl,pow=1;
+	u8 xpp=x;
+	u8 f,r,fl=0,l=3,lt;		//默认留3位小数,小数可留0~7位
+	u8 i,j,w,lp;
+	u32 v;
+	s8 c, d, s[16], *p;
+	s16 res, chc, cc,ll;
+	s16 kh,kl,pow=1;
 	double k;
+	FontInfo fi=SOLGUI_SwitchFont(mode);
 
 	va_start(arp, str);								//变长参数栈始点在str
 
@@ -72,8 +118,8 @@ void SOLGUI_printf(u8 x,u8 y,u8 mode,const u8* str,...)
 //---------------------------------//读取到非'%'符号时
 		if (c != '%') {						
 			//cc = f_putc(c, fil);		   			//正常输出字符
-			SOLGUI_Show_Char(xpp,y,c,mode);
-			xpp+=6;
+			SOLGUI_PutChar(xpp,y,c,mode);
+			xpp+=fi.FontWidth;									
 			continue;
 		}
 //---------------------------------//读取到'%'符号时
@@ -112,26 +158,26 @@ void SOLGUI_printf(u8 x,u8 y,u8 mode,const u8* str,...)
 		switch (d) {								//分类%*的情况
 
 		case 'S' :					/* String */
-			p = va_arg(arp,char*);					//取字符串变量
+			p = va_arg(arp,s8*);					//取字符串变量
 			for(j=0;p[j];j++);						//长度计算
 			ll=j;
 			chc = 0;
 			if (!(f&2)) {							//不用左对齐，左边就要补空格%06s
 				while (j++ < w) 
 				{
-					SOLGUI_Show_Char(xpp,y,' ',mode);
+					SOLGUI_PutChar(xpp,y,' ',mode);
 					chc+=1;
-					xpp+=6;
+					xpp+=fi.FontWidth;						
 				}
 			}
-			SOLGUI_Show_String(xpp,y,(unsigned char *)p,mode);
-			xpp=xpp+6*ll;
+			SOLGUI_PutString(xpp,y,(unsigned char *)p,mode);
+			xpp=xpp+fi.FontWidth*ll;						
 			chc+=ll;
 			while (j++ < w) 						//左对齐，左边就不用空格，右边填空格%-06s
 			{
-				SOLGUI_Show_Char(xpp,y,' ',mode);
+				SOLGUI_PutChar(xpp,y,' ',mode);
 				chc+=1;
-				xpp+=6;
+				xpp+=fi.FontWidth;						
 			}	 
 			cc = chc;
 			continue;
@@ -139,8 +185,8 @@ void SOLGUI_printf(u8 x,u8 y,u8 mode,const u8* str,...)
 		case 'C' :
 		{					/* Character */
 		//	cc = f_putc((TCHAR)va_arg(arp, int), fil); continue;
-			SOLGUI_Show_Char(xpp,y,(char)va_arg(arp,int),mode);
-			xpp+=6;
+			SOLGUI_PutChar(xpp,y,(char)va_arg(arp,int),mode);
+			xpp+=fi.FontWidth;								
 			continue;
 		}
 
@@ -190,8 +236,8 @@ void SOLGUI_printf(u8 x,u8 y,u8 mode,const u8* str,...)
 		case 'X' :					/* Hexdecimal */
 			r = 16; break;
 		default:{					/* Unknown type (pass-through) */
-				SOLGUI_Show_Char(xpp,y,c,mode);
-				xpp+=6;
+				SOLGUI_PutChar(xpp,y,c,mode);
+				xpp+=fi.FontWidth;								
 				cc=1;
 				continue;
 			}
@@ -218,21 +264,21 @@ PRT:
 		while (!(f&2)&&j++<w)
 		{
 			//res+=(cc = f_putc(d, fil));	//不用左对齐，左边就要补0或空格
-			SOLGUI_Show_Char(xpp,y,d,mode);
-			xpp+=6;
+			SOLGUI_PutChar(xpp,y,d,mode);
+			xpp+=fi.FontWidth;									
 		}
 		do 
 		{
 			//res += (cc = f_putc(s[--i], fil)); 
-			SOLGUI_Show_Char(xpp,y,s[--i],mode);
-			xpp+=6;
+			SOLGUI_PutChar(xpp,y,s[--i],mode);
+			xpp+=fi.FontWidth;									
 		}while(i);
 
 		while (j++ < w) 
 		{
 			//res += (cc = f_putc(' ', fil));		//右边补空格
-			SOLGUI_Show_Char(xpp,y,d,mode);
-			xpp+=6;
+			SOLGUI_PutChar(xpp,y,d,mode);
+			xpp+=fi.FontWidth;										
 		}
 	}
 	va_end(arp);

@@ -4,7 +4,7 @@
 
 //##########################【变量定义】############################
 /************GRAM定义************/
-unsigned char SOLGUI_GRAM[SCREEN_X_WIDTH][SCREEN_Y_PAGE];
+u8 SOLGUI_GRAM[SCREEN_X_WIDTH][SCREEN_Y_PAGE];
 
 //##########################【SOLGUI共用函数】############################
 
@@ -20,7 +20,7 @@ void SOLGUI_Refresh(void)		//刷新屏幕
 	memset(SOLGUI_GRAM,0,sizeof(SOLGUI_GRAM));			//GRAM清零
 }
 
-void SOLGUI_DrawPoint(u8 x,u8 y,u8 t)			//画点，t=1点亮；t=0熄灭.
+void SOLGUI_DrawPoint(u32 x,u32 y,u8 t)			//画点，t=1点亮；t=!1熄灭.
 {
 	unsigned char pos,bx,temp=0;
 	if(x>=(SCREEN_X_WIDTH)||y>=(SCREEN_Y_WIDTH))	//0~127
