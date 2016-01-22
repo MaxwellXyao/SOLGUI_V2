@@ -2,6 +2,9 @@
 #define SOLGUI_COMMON_H
 
 
+//########################【宏函数】############################
+#define SOLGUI_Fabs(num) (num<0)?-num:num						//用于数字显示，绝对值
+
 //##########################【API】############################
 void SOLGUI_Init(void);		//SOLGUI初始化
 void SOLGUI_Refresh(void);		//刷新屏幕
