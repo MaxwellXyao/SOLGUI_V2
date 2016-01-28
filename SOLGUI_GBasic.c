@@ -1,5 +1,4 @@
 #include"SOLGUI_Include.h"
-#include<math.h>
 
 
 

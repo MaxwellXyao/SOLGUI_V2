@@ -8,11 +8,25 @@ u8 SOLGUI_GRAM[SCREEN_X_WIDTH][SCREEN_Y_PAGE];
 
 //##########################【SOLGUI共用函数】############################
 
-void SOLGUI_Init(void) 		//SOLGUI初始化
+#if MENU_FRAME_EN==0		//SOLGUI不使用前台
+
+void SOLGUI_Init(void) 		//SOLGUI不使用前台时的初始化
 {
 	SOLGUI_Hardware_Init();
 	memset(SOLGUI_GRAM,0,sizeof(SOLGUI_GRAM));			//初始化后GRAM清零，防止出错
 }
+
+#elif MENU_FRAME_EN==1		//SOLGUI使用前台
+
+void SOLGUI_Init(MENU_PAGE *home_page) 		//SOLGUI使用前台时的初始化
+{
+	SOLGUI_Hardware_Init();
+	memset(SOLGUI_GRAM,0,sizeof(SOLGUI_GRAM));			//初始化后GRAM清零，防止出错
+	SOLGUI_Menu_SetHomePage(home_page);
+}
+
+#endif 
+
 
 void SOLGUI_Refresh(void)		//刷新屏幕
 {

@@ -5,13 +5,18 @@
 #define SOLGUI_VERSION "2.0"
 
 //##########################【SOLGUI源文件】############################
+//-----------【移植设置】
 #include"SOLGUI_Type.h"
 #include"SOLGUI_Config.h"
+
+//-----------【中间层】
 #include"SOLGUI_Common.h"
 #include"SOLGUI_Printf.h"
 #include"SOLGUI_GBasic.h"
 #include"SOLGUI_Picture.h"
-
+//-----------【应用层】
+#include"SOLGUI_Menu.h"
+#include"SOLGUI_Widget.h"
 
 /*##########################【使用说明】##########################
 【1】字符串的格式化输出:
@@ -34,7 +39,6 @@ SOLGUI_printf(21,26,F8X10,"helloworld!");
 	%x,%X:整型十六进制
 
 0x02:参数（只有这三种）
-	
 	%07d：补零（数字最小显示长读7格，不足则用0在前面补齐）
 	%-7d：左对齐（数字最小显示长度7格，不足则用空格在后面补齐）
 	%.4f: 保留小数位数（保留4位小数，最多保留7位）
