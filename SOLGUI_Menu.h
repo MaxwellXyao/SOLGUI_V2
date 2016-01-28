@@ -22,7 +22,8 @@ typedef struct __GUI_FIFO{
 
 //####################################【API】##########################################
 void SOLGUI_Menu_SetHomePage(MENU_PAGE *home_page);	//首页定义
-void SOLGUI_GetKeyValue(u8 key_value); 				//【非阻塞】从系统中获取当前按键键值
+void SOLGUI_InputKey(u8 key_value); 				//【非阻塞】从系统中获取当前按键键值存入键池
+u8 	 SOLGUI_GetCurrentKey(void); 					//【非阻塞】获取GUI当前的全局键值
 void SOLGUI_Menu_PageStage(void);					//【非阻塞】SOLGUI前台页面切换器
 
 

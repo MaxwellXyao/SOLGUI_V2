@@ -6,8 +6,11 @@
 //##############################【全局变量定义】##############################
 MENU_PAGE *current_page;//当前页面
 GUI_FIFO _key_cache;	//键值FIFO
+u8 cur_key=0;			//全局键值
 
-extern u8 CSR;		//当前状态寄存器
+extern u8 SOLGUI_CSR;		//当前状态寄存器
+extern u8 cursor_rel_offset;	//光标相对视口的偏移
+extern u8 viewport_offset;	//视口的偏移
 
 //##############################【内部使用】##############################
 
@@ -61,25 +64,30 @@ void SOLGUI_Menu_SetHomePage(MENU_PAGE *home_page)	//首页定义
 	FIFO_Init();
 }
 
-void SOLGUI_GetKeyValue(u8 key_value) 				//【非阻塞】从系统中获取当前按键键值存入FIFO
+void SOLGUI_InputKey(u8 key_value) 					//【非阻塞】从系统中获取当前按键键值存入键池
 {
 	FIFO_EnQueue(key_value);
+}
+
+u8 SOLGUI_GetCurrentKey(void) 						//【非阻塞】获取GUI当前的全局键值
+{
+  	return(cur_key); 	
 } 
 
 void SOLGUI_Menu_PageStage(void)					//【非阻塞】SOLGUI前台页面切换器
 {
-	u8 cur_key=0;
+//------------------【键值获取】
+	cur_key=FIFO_DeQueue();							//从池中取一个键值作为当前GUI的全局键值
 //------------------【界面绘制】
-	SOLGUI_Menu_Title(current_page);
+	SOLGUI_Menu_Title(current_page);				//标题
 //------------------【执行页面函数】
 	current_page->pageFunc();						//执行页面函数
-	cur_key=FIFO_DeQueue();							//从FIFO中取一个键值
-	if(cur_key==SOLGUI_KEY_BACK&&CSR==0){			//检查是否有返回键值且CSR为零（无占用）
+	if(cur_key==SOLGUI_KEY_BACK&&SOLGUI_CSR==0){			//检查是否为返回键值且CSR为零（无占用）
 		if(current_page->parentPage!=PAGE_NULL)		//有父页面才可使用返回键
 		{
 			current_page=current_page->parentPage;	//下次执行父页面函数
-//			cursor_al=0;							//清空指针计数器
-//			page_al=0;
+			cursor_rel_offset=0;					//清空光标偏移计数器
+			viewport_offset=0;
 		}
 	}
 }
