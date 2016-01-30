@@ -50,8 +50,8 @@ void SOLGUI_Menu_Title(MENU_PAGE *page)
 
 //---------【标题】
 	SOLGUI_printf(left_len+2,56,F6X8,"[ %s ]",page->pageTitle);				//page.pageTitle  页面标题居中
-	SOLGUI_GBasic_Line(0,57,left_len+2,57,DOTTED);							//标题线左
-	SOLGUI_GBasic_Line(left_len+title_len-2,57,SCREEN_X_WIDTH-1,57,DOTTED);	//标题线右
+	SOLGUI_GBasic_Line(6,57,left_len+2,57,ACTUAL);							//标题线左
+	SOLGUI_GBasic_Line(left_len+title_len-2,57,SCREEN_X_WIDTH-7,57,ACTUAL);	//标题线右
 //---------【返回图标】
 	if(page->parentPage!=PAGE_NULL) SOLGUI_printf(0,56,F6X8,"%c",0x85);	//有父页面则输出返回图标
 

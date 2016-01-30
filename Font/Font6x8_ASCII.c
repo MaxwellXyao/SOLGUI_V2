@@ -1212,8 +1212,20 @@ const u8 _Font6x8[][8] = {
    X____X__,
    XXXXXX__,
    ________}
+//--------【条转至页】
+/* 0x8f Gotopage*/
+ ,{
+   ________,
+   ___X____,
+   ___XX___,
+   ___XXX__,
+   ___XX___,
+   ___X____,
+   ________,
+   ________}
+
 //--------【其他】
-/* 0x8f temperature*/
+/* 0x90 temperature*/
  ,{
    ________,
    __X_____,
@@ -1223,7 +1235,7 @@ const u8 _Font6x8[][8] = {
    XXXXX___,
    _XXX____,
    ________}
-/* 0x90 degree Celsius*/
+/* 0x91 degree Celsius*/
  ,{
    ________,
    _X______,
@@ -1233,7 +1245,7 @@ const u8 _Font6x8[][8] = {
    ___X____,
    ____XX__,
    ________}
-/* 0x91 degrees fahrenheit*/
+/* 0x92 degrees fahrenheit*/
  ,{
    ________,
    _X______,
