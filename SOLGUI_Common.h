@@ -7,6 +7,10 @@
 //########################【宏函数】############################
 #define SOLGUI_Fabs(num) (num<0)?-num:num						//用于数字显示，绝对值
 
+#define bit(n) (1<<n) 
+#define bit_istrue(x,mask) ((x&mask) != 0)
+#define bit_isfalse(x,mask) ((x&mask) == 0)
+
 //##########################【API】############################
 #if MENU_FRAME_EN==0	//SOLGUI不使用前台
 	void SOLGUI_Init(void); 		//SOLGUI不使用前台时的初始化

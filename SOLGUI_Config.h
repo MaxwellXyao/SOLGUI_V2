@@ -6,12 +6,15 @@
 #define SCREEN_X_WIDTH 		128				//屏幕的X轴像素数
 #define SCREEN_Y_WIDTH 		64				//屏幕的Y轴像素数
 
-//--------------【屏幕长宽页数】		
+//--------------【屏幕长宽字数】		
 #define SCREEN_X_PAGE SCREEN_X_WIDTH/6		//支持多少个默认6x8字宽
 #define SCREEN_Y_PAGE SCREEN_Y_WIDTH/8		//支持多少个默认6x8字高
 
 //--------------【选项最大数目】
-#define OPTIONS_MAX			16				//最大可以的选项数
+#define OPTIONS_MAX			16				//每页最大可以存放的选项数
+
+//--------------【选表选项最大数目】
+#define LIST_OPTIONS_MAX	16				//选表最大可以存放的选项数
 
 //--------------【FIFO键值缓存大小】
 #define FIFOBUF_SIZE		5				//可以缓存的键值数
