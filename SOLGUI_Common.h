@@ -19,6 +19,7 @@
 #endif
  
 void SOLGUI_Refresh(void);		//刷新屏幕
+void SOLGUI_Clean(void);		//软清屏（必须刷新GRAM）
 void SOLGUI_DrawPoint(u32 x,u32 y,u8 t);			//画点，t=1点亮；t=0熄灭.
 
 #endif

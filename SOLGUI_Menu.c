@@ -53,7 +53,7 @@ void SOLGUI_Menu_Title(MENU_PAGE *page)
 	SOLGUI_GBasic_Line(6,57,left_len+2,57,ACTUAL);							//标题线左
 	SOLGUI_GBasic_Line(left_len+title_len-2,57,SCREEN_X_WIDTH-7,57,ACTUAL);	//标题线右
 //---------【返回图标】
-	if(page->parentPage!=PAGE_NULL) SOLGUI_printf(0,56,F6X8,"%c",0x85);	//有父页面则输出返回图标
+	if((page->parentPage!=PAGE_NULL)&&(SOLGUI_CSR==0)) SOLGUI_printf(0,56,F6X8,"%c",0x85);	//有父页面且在非占用模式下则输出返回图标
 
 }
 
@@ -72,7 +72,7 @@ void SOLGUI_InputKey(u8 key_value) 					//【非阻塞】从系统中获取当前按键键值存入
 u8 SOLGUI_GetCurrentKey(void) 						//【非阻塞】获取GUI当前的全局键值
 {
   	return(cur_key); 	
-} 
+}
 
 void SOLGUI_Menu_PageStage(void)					//【非阻塞】SOLGUI前台页面切换器
 {
@@ -82,7 +82,7 @@ void SOLGUI_Menu_PageStage(void)					//【非阻塞】SOLGUI前台页面切换器
 	SOLGUI_Menu_Title(current_page);				//标题
 //------------------【执行页面函数】
 	current_page->pageFunc();						//执行页面函数
-	if(cur_key==SOLGUI_KEY_BACK&&SOLGUI_CSR==0){			//检查是否为返回键值且CSR为零（无占用）
+	if(cur_key==SOLGUI_KEY_BACK&&SOLGUI_CSR==0){	//检查是否为返回键值且CSR无占用
 		if(current_page->parentPage!=PAGE_NULL)		//有父页面才可使用返回键
 		{
 			current_page=current_page->parentPage;	//下次执行父页面函数

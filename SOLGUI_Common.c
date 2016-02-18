@@ -31,6 +31,11 @@ void SOLGUI_Init(MENU_PAGE *home_page) 		//SOLGUI使用前台时的初始化
 void SOLGUI_Refresh(void)		//刷新屏幕
 {
 	SOLGUI_Hardware_FillScreen(SOLGUI_GRAM);
+	SOLGUI_Clean();
+}
+
+void SOLGUI_Clean(void)			//软清屏（必须刷新GRAM）
+{
 	memset(SOLGUI_GRAM,0,sizeof(SOLGUI_GRAM));			//GRAM清零
 }
 

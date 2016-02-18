@@ -81,24 +81,45 @@ void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//画线（mode：
 void  GUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode)		//画矩形（左下角，右上角，模式）
 {
 	u32 i=0;
-	if(mode&0x04)	//填充
+	if(bit_istrue(mode,bit(2))||(mode==DELETE))	//是否填充
 	{
 		if(x0>x1) {i=x0;x0=x1;x1=i;}	//若x0>x1，则x0与x1交换
 		if(y0>y1) {i=y0;y0=y1;y1=i;}	//若y0>y1，则y0与y1交换
-		if(y0==y1) 
-		{  
-			SOLGUI_GBasic_Line(x0,y0,x1,y0,ACTUAL);
-			return;
+		if(mode==DELETE)
+		{
+			if(y0==y1) 
+			{  
+				SOLGUI_GBasic_Line(x0,y0,x1,y0,DELETE);
+				return;
+			}
+			if(x0==x1) 
+			{  
+				SOLGUI_GBasic_Line(x0,y0,x0,y1,DELETE);
+				return;
+			}						
+			while(y0<=y1)						
+			{  
+				SOLGUI_GBasic_Line(x0,y0,x1,y0,DELETE);
+				y0++;				
+			}
 		}
-		if(x0==x1) 
-		{  
-			SOLGUI_GBasic_Line(x0,y0,x0,y1,ACTUAL);
-			return;
-		}						
-		while(y0<=y1)						
-		{  
-			SOLGUI_GBasic_Line(x0,y0,x1,y0,ACTUAL);
-			y0++;				
+		else
+		{
+			if(y0==y1) 
+			{  
+				SOLGUI_GBasic_Line(x0,y0,x1,y0,ACTUAL);
+				return;
+			}
+			if(x0==x1) 
+			{  
+				SOLGUI_GBasic_Line(x0,y0,x0,y1,ACTUAL);
+				return;
+			}						
+			while(y0<=y1)						
+			{  
+				SOLGUI_GBasic_Line(x0,y0,x1,y0,ACTUAL);
+				y0++;				
+			}	
 		}
 	}
 	else			   //非填充

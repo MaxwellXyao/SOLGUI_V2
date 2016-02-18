@@ -1,24 +1,88 @@
 #include"SOLGUI_Include.h"
 #include<string.h>
+#include<stdarg.h> 						//支持变长参数
 
 #if MENU_FRAME_EN==1
 //##############################【变量定义】##############################
 //-----------【状态寄存器】
-u8 SOLGUI_CSR=0;		//设置模式控制寄存器（1在设置模式中，0空闲）
+/*	
+	SOLGUI_CSR[0]：	SPIN占用1，空闲0
+	SOLGUI_CSR[1]：	EDIT占用1，空闲0（要占用全屏）
+	SOLGUI_CSR[2]： EDIT输入法开启1，关闭0
+*/
+u8 SOLGUI_CSR=0;		//设置模式控制寄存器
 //-----------【光标偏移计数器】
-/*选项编号向下生长*/
+/*选项编号向下生长：
+   >option0
+	option1
+	option2
+	...
+*/
 u8 cursor_rel_offset=0;	//光标相对视口的偏移
 u8 viewport_offset=0;	//视口的偏移
 //-----------【光标位置计算】
 u8 row_start=0;			//选项起始行（光标运动上界）
 u8 viewport_width=0;	//视口宽度
-
+u32 y_t=0,y_b=0;		//边界上下坐标
 //-----------【选项使能表】
 u8 option_enable_list[OPTIONS_MAX];		//选项使能表,此处可以改进
 
-
 //-----------【GotoPage控件】
-extern MENU_PAGE *current_page;//当前页面
+extern MENU_PAGE *current_page;	//当前页面
+
+
+//-----------【EDIT控件】
+u8 edit_buf[EDIT_BUF_SIZE];		//编辑器缓存buf
+u16 edit_buf_len=0;				//编辑器内的内容长度	
+u16 edit_cursor_row=0;			//编辑器光标横字符位置
+u16 edit_cursor_col=0;			//编辑器光标纵字符位置
+
+
+//-----------【输入法】
+const u8 SOL_ASCII_IME_lowerchar[]	="abcdefghijklmnopqrstuvwxyz";
+const u8 SOL_ASCII_IME_upperchar[]	="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const u8 SOL_ASCII_IME_Number[]		="0123456789+-*/=%()[]{}<>&|~^";
+const u8 SOL_ASCII_IME_symbol[]		=" .,:;_?!@#$'\"\\";
+const u8 SOL_ASCII_IME_CRLchar[]	={0x00,0x0a,0x0d};	//控制类字符
+
+EDIT_IME SOL_ASCII_IME={			//简易ascii输入法
+	0,								//字符集当前指向储存
+	SOL_ASCII_IME_SIZE,				//字符集大小
+   {{0,"LOWER",26,SOL_ASCII_IME_lowerchar},
+	{0,"UPPER",26,SOL_ASCII_IME_upperchar},
+	{0,"NUMBER",28,SOL_ASCII_IME_Number},
+	{0,"SYMBOL",14,SOL_ASCII_IME_symbol},
+	{0,"CTRL",3,SOL_ASCII_IME_CRLchar}}
+};
+
+//################################【光标】##############################
+
+boolean _OptionsDisplay_Judge(u8 USN)
+{
+	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width&&(!bit_istrue(SOLGUI_CSR,bit(1))))	
+		return(True);	//显示选项	
+	else return(False);	 //不显示选项	
+}
+
+u32 _OptionsDisplay_coorY(u8 USN)
+{
+	return((row_start-USN+viewport_offset)*8);
+}
+
+
+double _Pow_10(s8 n) 	//pow=10^n
+{
+	s16 i=0;
+	s8 m=(n>=0)?n:-n;
+	double p=1;
+
+	for(i=0;i<m;i++)
+	{
+		if(n>=0) p*=10;
+		else p*=0.1;
+	}
+	return(p);
+}
 
 //################################【光标】##############################
 //选项式控件必须有光标才能操作
@@ -30,7 +94,6 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num)		//光标（
 	u8 cursor_row=0;
 	u8 cursor_abs_offset=0;	//光标的绝对偏移
 
-	u32 y_t=0,y_b=0;
 	double s_h=0;			//滑块的高度
 	u32 s_y=0;				//滑块的位置
 //--------【参数过滤】
@@ -67,9 +130,9 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num)		//光标（
 	if(rowBorder_Top!=0) SOLGUI_GBasic_Line(0,y_b-1,SCREEN_X_WIDTH-1,y_b-1,DOTTED);		//下边线
 //---【滚动条】
 
-	s_h=(double)(y_t-y_b+8)/(double)option_num;									//滑块高度???????????????????????
-	s_y=y_t+7-s_h*(cursor_abs_offset+1);							//滑块位置???????????????????????
-	GUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,s_y,SCREEN_X_WIDTH-1,s_y+s_h,FILL);	//滑块???????????????????????
+	s_h=(double)(y_t-y_b+8)/(double)option_num;									//滑块高度
+	s_y=y_t+7-s_h*(cursor_abs_offset+1);										//滑块位置
+	GUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,s_y,SCREEN_X_WIDTH-1,s_y+s_h,FILL);	//滑块
 
 	GUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,y_b,SCREEN_X_WIDTH-1,y_t+7,ACTUAL);	//边框
 
@@ -83,14 +146,14 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num)		//光标（
 
 void SOLGUI_Widget_GotoPage(u8 USN,MENU_PAGE *page)		//页面跳转控件
 {
-	u8 row_disp=0;	//该选项应该显示的行位置
+	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //--------【计算显示行】
-	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width)
+	if(True==_OptionsDisplay_Judge(USN))
 	{		
-		row_disp=row_start-USN+viewport_offset;
+		y_disp=_OptionsDisplay_coorY(USN);
 		if(option_enable_list[USN]==1)
 		{
 //--------【键值解析】
@@ -102,34 +165,18 @@ void SOLGUI_Widget_GotoPage(u8 USN,MENU_PAGE *page)		//页面跳转控件
 			}					
 		}
 //--------【选项绘制】
-		SOLGUI_printf(6,row_disp*8,F6X8,"%s",page->pageTitle);		//下一个页面标题
-		SOLGUI_printf(SCREEN_X_WIDTH-13,row_disp*8,F6X8,"%c",0x8f);	//图标
+		SOLGUI_printf(6,y_disp,F6X8,"%s",page->pageTitle);		//下一个页面标题
+		SOLGUI_printf(SCREEN_X_WIDTH-13,y_disp,F6X8,"%c",0x8f);	//图标
 //--------【操作提示绘制】
 		if((viewport_offset+cursor_rel_offset)==USN)
 		SOLGUI_printf(SCREEN_X_WIDTH-6,56,F6X8,"%c",0x84);			//操作指示（根据键值解析部分来编写）
 	}
 }
 
-
-
-double _Pow_10(s8 n) 	//pow=10^n
-{
-	s16 i=0;
-	s8 m=(n>=0)?n:-n;
-	double p=1;
-
-	for(i=0;i<m;i++)
-	{
-		if(n>=0) p*=10;
-		else p*=0.1;
-	}
-	return(p);
-}
-
 void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void* value)		//数字旋钮控件
 {
 	double swap;	
-	u8 row_disp=0;	//该选项应该显示的行位置
+	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
 
 	static s8 spin_pos=0;	//旋钮位置
@@ -151,18 +198,17 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 	else if(type==DECIMAL) v_f=(double *)value;	 //小数
 	else v_l=(s32 *)value;		//其他默认做整数处理（待扩展）
 //--------【计算显示行】
-	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width)
+	if(True==_OptionsDisplay_Judge(USN))
 	{		
-		row_disp=row_start-USN+viewport_offset;
+		y_disp=_OptionsDisplay_coorY(USN);
 		if(option_enable_list[USN]==1)
 		{
 //--------【键值解析】
 			cur_key=SOLGUI_GetCurrentKey();				//获取当前全局键值
 			if(cur_key==SOLGUI_KEY_OK){					//OK键			
-				SOLGUI_CSR++;							//CSR翻转
-				if(SOLGUI_CSR>1) SOLGUI_CSR=0;													
+				SOLGUI_CSR^=bit(0);						//CSR[0]翻转，置1表示SPIN占用									
 			}
-			if(SOLGUI_CSR==1)							//如果处于设置模式中
+			if(bit_istrue(SOLGUI_CSR,bit(0)))			//如果处于SPIN占用中
 			{
 				dat_step=_Pow_10(spin_pos);				//计算调节步进值
 
@@ -189,12 +235,12 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 			}				
 		}
 //--------【选项：变量名&数值绘制】
-		SOLGUI_printf(6,row_disp*8,F6X8,"%s",name);		//变量名
-		if(type==DECIMAL) SOLGUI_printf(68,row_disp*8,F6X8,"%f",*v_f);	//数值		
-		else SOLGUI_printf(68,row_disp*8,F6X8,"%d",*v_l);	//数值						
+		SOLGUI_printf(6,y_disp,F6X8,"%s",name);		//变量名
+		if(type==DECIMAL) SOLGUI_printf(68,y_disp,F6X8,"%f",*v_f);	//数值		
+		else SOLGUI_printf(68,y_disp,F6X8,"%d",*v_l);	//数值						
 //--------【旋钮绘制】
-		if((SOLGUI_CSR==1)&&(option_enable_list[USN]==1)) 
-		SOLGUI_printf(0,row_disp*8,~F6X8,"%c%f%c",0x82,dat_step,0x83);	   	//如果处于设置模式中，显示旋钮数值
+		if(bit_istrue(SOLGUI_CSR,bit(0))&&(option_enable_list[USN]==1)) 
+		SOLGUI_printf(0,y_disp,~F6X8,"%c%f%c",0x82,dat_step,0x83);	   	//如果处于设置模式中，显示旋钮数值
 //--------【操作提示绘制】
 		if((viewport_offset+cursor_rel_offset)==USN)
 		SOLGUI_printf(SCREEN_X_WIDTH-6,56,F6X8,"%c",0x84);			//操作指示（根据键值解析部分来编写）
@@ -203,32 +249,32 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 
 void SOLGUI_Widget_Text(u8 USN,const u8 *text)						//文本
 {
-	u8 row_disp=0;	//该选项应该显示的行位置
+	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 t[SCREEN_X_PAGE-2];		//字符缓存
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 	if(strlen((const char *)text)>(SCREEN_X_PAGE-2)) strncpy((char *)t,(const char *)text,(SCREEN_X_PAGE-2));		//字数限制 
 	else strcpy((char *)t,(const char *)text); 
 //--------【计算显示行】
-	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width)
+	if(True==_OptionsDisplay_Judge(USN))
 	{		
-		row_disp=row_start-USN+viewport_offset;
+		y_disp=_OptionsDisplay_coorY(USN);
 //--------【选项绘制】
-		SOLGUI_printf(6,row_disp*8,F6X8,"%s",t);		//文本显示
+		SOLGUI_printf(6,y_disp,F6X8,"%s",t);		//文本显示
 	}
 }
 
 void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void))				//按键
 {
-	u8 row_disp=0;	//该选项应该显示的行位置
+	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
 	u8 run_f=0;		//运行记号
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //--------【计算显示行】
-	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width)
+	if(True==_OptionsDisplay_Judge(USN))
 	{		
-		row_disp=row_start-USN+viewport_offset;
+		y_disp=_OptionsDisplay_coorY(USN);
 		if(option_enable_list[USN]==1)
 		{
 //--------【键值解析】
@@ -238,8 +284,8 @@ void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void))				//按键
 			}					
 		}
 //--------【选项绘制】
-		SOLGUI_printf(6,row_disp*8,F6X8,"%s",name);					//选项名
-		SOLGUI_printf(68,row_disp*8,F6X8,"->");						//图标
+		SOLGUI_printf(6,y_disp,F6X8,"%s",name);					//选项名
+		SOLGUI_printf(68,y_disp,F6X8,"->");						//图标
 //--------【运行牵连函数】		
 		if(run_f==1) 												//按下OK键，运行牵连函数
 		{
@@ -254,7 +300,7 @@ void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void))				//按键
 
 void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift,u8 mode)		//变量开关（mem_value是一个外部申请的非易失性存储器变量）
 {
-	u8 row_disp=0;	//该选项应该显示的行位置
+	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
 	u8 ico_on=0,ico_off=0;
 	u32 temp=bit(L_shift);
@@ -262,9 +308,9 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift,u8 mod
 	if((L_shift<1)||(L_shift>32)) L_shift=1;	//小于1或大于32都划归为1
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //--------【计算显示行】
-	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width)
+	if(True==_OptionsDisplay_Judge(USN))
 	{		
-		row_disp=row_start-USN+viewport_offset;
+		y_disp=_OptionsDisplay_coorY(USN);
 		if(option_enable_list[USN]==1)
 		{
 //--------【键值解析】
@@ -274,7 +320,7 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift,u8 mod
 			}					
 		}
 //--------【选项绘制】
-		SOLGUI_printf(6,row_disp*8,F6X8,"%s",name);					//选项名
+		SOLGUI_printf(6,y_disp,F6X8,"%s",name);					//选项名
 //--------【图标选择】
 		if(mode==ONxOFF2)
 		{
@@ -285,16 +331,16 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift,u8 mod
 			ico_on=0x88;
 			ico_off=0x87;	
 		}
-//--------【运行牵连函数】
+//--------【图标绘制】
 		if(bit_istrue((*mem_value),temp)) 												//按下OK键，函数开
 		{
-			if((mode==ONxOFF2)||(mode==ONxOFF3))	SOLGUI_printf(68,row_disp*8,F6X8,"%c",ico_on);		//"开"图标
-			else SOLGUI_printf(68,row_disp*8,F6X8,"ON");												//"开"文字																						//允许运行函数
+			if((mode==ONxOFF2)||(mode==ONxOFF3))	SOLGUI_printf(68,y_disp,F6X8,"%c",ico_on);		//"开"图标
+			else SOLGUI_printf(68,y_disp,F6X8,"[ON ]");												//"开"文字																						//允许运行函数
 		}
 		else
 		{
-			if((mode==ONxOFF2)||(mode==ONxOFF3))	SOLGUI_printf(68,row_disp*8,F6X8,"%c",ico_off);		//"关"图标
-			else SOLGUI_printf(68,row_disp*8,F6X8,"OFF");												//"关"文字
+			if((mode==ONxOFF2)||(mode==ONxOFF3))	SOLGUI_printf(68,y_disp,F6X8,"%c",ico_off);		//"关"图标
+			else SOLGUI_printf(68,y_disp,F6X8,"[OFF]");												//"关"文字
 		}
 //--------【操作提示绘制】
 		if((viewport_offset+cursor_rel_offset)==USN)
@@ -303,75 +349,169 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift,u8 mod
 }
 
 
-void SOLGUI_Widget_List(u8 USN,const u8 *name,u16 *value,u8 *opt_str[OPTIONS_MAX],s16 opt_val[OPTIONS_MAX])							//选表
-{
-	u8 row_disp=0;	//该选项应该显示的行位置
+void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u8 *buf)			//文本编辑器
+{	
+	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
-
+	u8 edit_thumbnail_buf[EDIT_THUMBNAIL_SIZE];	//缩略内容
+	u16 i=0,j=0,buf_i=0;		
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //--------【计算显示行】
 	if((USN-viewport_offset)>=0&&(USN-viewport_offset)<=viewport_width)
 	{		
-		row_disp=row_start-USN+viewport_offset;
+		y_disp=_OptionsDisplay_coorY(USN);
 		if(option_enable_list[USN]==1)
 		{
-//--------【键值解析】
+//--------【键值解析：进入EDIT占用】
 			cur_key=SOLGUI_GetCurrentKey();				//获取当前全局键值
-			if(cur_key==SOLGUI_KEY_OK){					//OK键			
-				SOLGUI_CSR++;							//CSR翻转
-				if(SOLGUI_CSR>1) SOLGUI_CSR=0;													
+			if(cur_key==SOLGUI_KEY_OK){					//OK键
+//--------【光标指在(0,0)位置】
+				if((edit_cursor_row==0)&&(edit_cursor_col==0)) 	 //如果光标指字符(0,0)位
+				{
+					if(bit_istrue(SOLGUI_CSR,bit(1)))	//如果在编辑状态下
+					{
+						SOLGUI_CSR&=(~bit(1));					//CSR[1]=0，置0表示EDIT占用解除
+						strcpy((char *)buf,(char *)edit_buf); 	//向上更新buf	  //-------------------------【可能有bug产生】
+					}
+					else
+					{
+						SOLGUI_CSR|=bit(1);					//CSR[1]=1，置0表示EDIT占用
+						edit_buf_len=strlen((char *)buf);	//取buf长度
+						memset(edit_buf,0,sizeof(edit_buf));			//edit_buf清零
+						if(edit_buf_len>EDIT_BUF_SIZE) strncpy((char *)edit_buf,(char *)buf,EDIT_BUF_SIZE);	//带字数限制的复制 
+						else strcpy((char *)edit_buf,(char *)buf);	//向下更新buf
+					}
+				}										
+				else
+				{
+//--------【光标指在其他字符位置，按下开关输入法】
+					SOLGUI_CSR^=bit(2);						//CSR[2]翻转，置1表示输入法占用
+				//	buf_i=(SCREEN_X_PAGE-2)*edit_cursor_col+edit_cursor_row-1;			//光标指示位置在字符串中的下标
+				}
 			}
-			if(SOLGUI_CSR==1)							//如果处于设置模式中
-			{
-				if(cur_key==SOLGUI_KEY_UP)														//上
+			if(bit_istrue(SOLGUI_CSR,bit(1)))			//如果处于EDIT占用状态下
+			{	
+//--------【键值解析：EDIT占用下的操作】
+				if(cur_key==SOLGUI_KEY_UP)								//光标向上&字符加
 				{
-							
+					if(bit_istrue(SOLGUI_CSR,bit(2)) &&(SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].finger>0))
+						SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].finger--;//输入法上	
+					else if(bit_isfalse(SOLGUI_CSR,bit(2))&&edit_cursor_col>0) edit_cursor_col--;			//纵光标减
 				}
-				else if(cur_key==SOLGUI_KEY_DOWN)												//下
+				else if(cur_key==SOLGUI_KEY_DOWN)						//光标向下&字符减
 				{
-					
+					if(bit_istrue(SOLGUI_CSR,bit(2)) &&(SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].finger<SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].size-1))
+						SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].finger++;//输入法下	
+					else if(bit_isfalse(SOLGUI_CSR,bit(2))&&edit_cursor_col<(SCREEN_Y_PAGE-4)&&(((edit_cursor_col)*(SCREEN_X_PAGE-2)+edit_cursor_row+(SCREEN_X_PAGE-2))<EDIT_BUF_SIZE)) 
+						edit_cursor_col++;				//纵光标加
 				}
-				else if(cur_key==SOLGUI_KEY_LEFT)												//左
+				else if(cur_key==SOLGUI_KEY_LEFT)						//光标向左&字符类型左切换
 				{
-											
+					if(bit_istrue(SOLGUI_CSR,bit(2))&&(SOL_ASCII_IME.finger>0)) SOL_ASCII_IME.finger--;	 //输入法换簇左
+					else if(bit_isfalse(SOLGUI_CSR,bit(2))&&edit_cursor_row>0) edit_cursor_row--;			//横光标减
 				}
-				else if(cur_key==SOLGUI_KEY_RIGHT)												//右
+				else if(cur_key==SOLGUI_KEY_RIGHT)						//光标向左&字符类型右切换
 				{
-					
+					if(bit_istrue(SOLGUI_CSR,bit(2))&&(SOL_ASCII_IME.finger<SOL_ASCII_IME.size-1)) SOL_ASCII_IME.finger++; //输入法换簇右	
+					else if(bit_isfalse(SOLGUI_CSR,bit(2))&&edit_cursor_row<(SCREEN_X_PAGE-3)&&(((edit_cursor_col)*(SCREEN_X_PAGE-2)+edit_cursor_row+1)<EDIT_BUF_SIZE)) 
+						edit_cursor_row++;//横光标加
 				}
 			}				
 		}
 //--------【选项：变量名&数值绘制】
-		SOLGUI_printf(6,row_disp*8,F6X8,"%s",name);		//变量名
-							
-//--------【旋钮绘制】
-		if((SOLGUI_CSR==1)&&(option_enable_list[USN]==1)) 
+		if(bit_istrue(SOLGUI_CSR,bit(1)))
 		{
-		
-		}		
+//----【在EDIT占用下，显示编辑窗（全屏占用）】
+//----[绘制编辑框]
+			SOLGUI_Clean();					//软清屏
+			GUI_GBasic_Rectangle(0,0,SCREEN_X_WIDTH-1,SCREEN_Y_WIDTH-1,ACTUAL);		//边框
+			SOLGUI_GBasic_Line(0,9,SCREEN_X_WIDTH-1,9,ACTUAL);						//底部的线
+
+			
+			if(bit_istrue(SOLGUI_CSR,bit(2)))
+			{
+				SOLGUI_printf(2,1,F6X8,"%s",SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].name);	   //字符簇名
+				SOLGUI_printf(64,1,F6X8,"[ %c ]",SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].table[SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].finger]);
+				edit_buf[(SCREEN_X_PAGE-2)*edit_cursor_col+edit_cursor_row-1]=SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].table[SOL_ASCII_IME.cluster[SOL_ASCII_IME.finger].finger];	//字符串赋值
+			}
+			else SOLGUI_printf(2,1,F6X8,"L:%d C:%d",edit_cursor_col+1,edit_cursor_row+1); //光标位置
+//----[内容显示]
+			for(i=0;i<(SCREEN_Y_PAGE-3);i++)
+			{
+				for(j=0;j<(SCREEN_X_PAGE-2);j++)
+				{
+					if(i==0&&j==0)
+					{
+//----[控制位显示(0,0)]
+						if((edit_cursor_row==0)&&(edit_cursor_col==0)) 
+							SOLGUI_printf(6,48,~F6X8,"%c",0x85);			//确认操作指示，字符坐标(0,0)反白
+						else SOLGUI_printf(6,48,F6X8,"%c",0x85);			
+					}
+					else
+					{
+//----[其他字符显示]
+						buf_i=(SCREEN_X_PAGE-2)*i+j-1;			//光标指着的位置
+						if(buf_i<EDIT_BUF_SIZE)
+						{
+							if((edit_cursor_row==j)&&(edit_cursor_col==i))					//如果指向该字符 
+							{
+								if(edit_buf[buf_i]=='\0') SOLGUI_printf(6+j*6,48-i*8,~F6X8,"%c",0x90);	//'\0'用'...'来表示，即可编辑区域
+								else SOLGUI_printf(6+j*6,48-i*8,~F6X8,"%c",edit_buf[buf_i]);			//选中的字反白显示
+							}
+							else 
+							{	
+								if(edit_buf[buf_i]=='\0') SOLGUI_printf(6+j*6,48-i*8,F6X8,"%c",0x90);   //'\0'用'...'来表示，即可编辑区域
+								else SOLGUI_printf(6+j*6,48-i*8,F6X8,"%c",edit_buf[buf_i]);
+							}
+						}
+						else 
+						{
+							i=SCREEN_Y_PAGE; j=SCREEN_X_PAGE;	//跳出循环
+						}
+					}
+				}
+			}												
+		}
+		else
+		{
+//----【不在EDIT占用下，显示选项】
+			SOLGUI_printf(6,y_disp,F6X8,"%s",name);		//变量名
+			if(strlen((char *)buf)>EDIT_THUMBNAIL_SIZE) //缩略信息处理
+				strncpy((char *)edit_thumbnail_buf,(char *)buf,EDIT_THUMBNAIL_SIZE);	//带字数限制的复制 
+			else strcpy((char *)edit_thumbnail_buf,(char *)buf);
+			SOLGUI_printf(68,y_disp,F6X8,"%s",edit_thumbnail_buf);		//缩略内容显示
+			if(strlen((const char *)buf)>(SCREEN_X_PAGE-14))
+			SOLGUI_printf(SCREEN_X_WIDTH-19,y_disp,F6X8,"%c",0x90);	//内容隐藏图标
+			SOLGUI_printf(SCREEN_X_WIDTH-13,y_disp,F6X8,"%c",0x8c);	//EDIT图标
+		}
 //--------【操作提示绘制】
 		if((viewport_offset+cursor_rel_offset)==USN)
 		SOLGUI_printf(SCREEN_X_WIDTH-6,56,F6X8,"%c",0x84);			//操作指示（根据键值解析部分来编写）
-	}
+	}	
 }
-
-
-
-
 
 //##############################【自由式控件】##############################
 
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode)		//条
 {
+	s32 swap=0;
 	double f=0;
 	u32 d=0;
 
+//--------【参数过滤】
+	if(max<min)
+	{
+		swap=max;
+		max=min;
+		min=swap;
+	}
 	value=(value<max)?value:max;
 	value=(value>min)?value:min;
 
+//----------【计算每格步长】
 	f=(double)(value-min)/(double)(max-min);
-
+//----------【绘制x生长的条】
 	if((mode&0x01)==DIREC_X)				//x生长
 	{
 		d=f*xsize;
@@ -388,7 +528,8 @@ void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 val
 		}
 	}
 	else									//y生长
-	{		
+	{
+//----------【绘制y生长的条】		
 		d=f*ysize;
 		if((mode&0x06)==PROGBAR) 			//进度条
 		{
@@ -402,6 +543,64 @@ void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 val
 			SOLGUI_GBasic_Line(x0,y0,x0,y0+ysize,DELETE);
 		}
 	}	
+}
+
+void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u16 val_num,s32 value[])
+{
+	s32 swap=0;
+	u16 i=0;
+	double delta_x=0,delta_y=0;
+	double x_p=0;
+	u32 x_last=x0,y_last=y0,y_zero=0;
+	s32 val_now=0;
+
+	u32 x_now=0,y_now=0;
+
+//--------【参数过滤】
+	if(max<min)
+	{
+		swap=max;
+		max=min;
+		min=swap;
+	}
+//------------【相关计算】
+	delta_x=(double)(val_num)/(double)(xsize);		//计算
+	delta_y=(double)(ysize)/(double)(max-min);		//计算一个像素是多少值
+//------------【曲线绘制】
+	for(i=0;i<xsize;i++)
+	{
+		x_p+=delta_x;
+		val_now=value[(int)x_p];
+		x_now=x0+i;
+		if((val_now>=min)&&(val_now<max)) y_now=y0+(u32)((val_now-min)*delta_y);
+		else if(val_now<min) y_now=y0;
+		else y_now=y0+ysize-1;
+		SOLGUI_GBasic_Line(x_last,y_last,x_now,y_now,ACTUAL);
+		x_last=x_now;
+		y_last=y_now;	
+	}
+//------------【外框绘制】
+	GUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
+//------------【零点绘制】
+	if(min<0)
+	{
+		y_zero=y0+(u32)((-min)*delta_y);
+		SOLGUI_DrawPoint(x0+1,y_zero,1);
+	}	
+}
+
+void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value)
+{
+//	SOLGUI_Widget_Spectrum(x0,y0,xsize,ysize,max,min,val_num,value[]);
+}
+
+void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u8 mode)
+{
+//------------【外框绘制】
+	GUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
+//------------【图片绘制】
+//	SOLGUI_Pictrue(x0,y0,xsize,ysize,pic,mode);
+//		
 }
 
 #endif
