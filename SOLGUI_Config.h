@@ -25,7 +25,18 @@
 #define	SOLGUI_KEY_BACK		0x60			//返回键键值
 
 //--------------【系统图标设置】
-#define	ICON_CURSOR 		0x86			//光标图样（可以在Font6x8_ASCII.c中设置）
+#define	ICON_UP				0x80			//上（可以在Font6x8_ASCII.c中设置）
+#define	ICON_DOWN			0x81			//下（可以在Font6x8_ASCII.c中设置）
+#define	ICON_LEFT			0x82			//左（可以在Font6x8_ASCII.c中设置）
+#define	ICON_RIGHT			0x83			//右（可以在Font6x8_ASCII.c中设置）
+#define	ICON_OK				0x84			//OK（可以在Font6x8_ASCII.c中设置）
+#define	ICON_BACK			0x85			//返回（可以在Font6x8_ASCII.c中设置）
+#define	ICON_CURSOR 		0x86			//光标（可以在Font6x8_ASCII.c中设置）
+
+#define	ICON_WIDGET_GOTOPAGE 0x87			//页面跳转控件（可以在Font6x8_ASCII.c中设置）
+#define	ICON_WIDGET_EDIT	0x88			//文本编辑控件（可以在Font6x8_ASCII.c中设置）
+
+#define	ICON_OTHER_HIDE		0x89			//省略号（可以在Font6x8_ASCII.c中设置）
 
 //--------------【SPIN控件：上下限位数设置】
 #define SPIN_DIGIT_MAX 		5				//可在SPIN中设置的上限位数（超过5位会出错）
