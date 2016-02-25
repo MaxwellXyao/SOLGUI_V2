@@ -8,9 +8,14 @@ MENU_PAGE *current_page;//当前页面
 GUI_FIFO _key_cache;	//键值FIFO
 u8 cur_key=0;			//全局键值
 
-extern u8 SOLGUI_CSR;		//当前状态寄存器
-extern u8 cursor_rel_offset;	//光标相对视口的偏移
-extern u8 viewport_offset;	//视口的偏移
+u8 SOLGUI_CSR=0;		//占用标志寄存器（若非零即表示占用，不能退出当前页面）
+/*----------------【占用标志寄存器】------------------	
+	SOLGUI_CSR[0]：	OK[深度1]占用1，空闲0
+	SOLGUI_CSR[1]：	全屏占用1，空闲0（要占用全屏）
+	SOLGUI_CSR[2]： OK[深度2]占用1，关闭0
+-----------------------------------------------------*/
+
+extern CURSOR *cursor;	//光标记载
 
 //##############################【内部使用】##############################
 
@@ -86,19 +91,10 @@ void SOLGUI_Menu_PageStage(void)					//【非阻塞】SOLGUI前台页面切换器
 		if(current_page->parentPage!=PAGE_NULL)		//有父页面才可使用返回键
 		{
 			current_page=current_page->parentPage;	//下次执行父页面函数
-			cursor_rel_offset=0;					//清空光标偏移计数器
-			viewport_offset=0;
+			cursor->cursor_rel_offset=0;			//清空光标偏移计数器
+			cursor->viewport_offset=0;
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
 
 #endif

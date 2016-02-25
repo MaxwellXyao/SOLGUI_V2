@@ -9,18 +9,20 @@
 
 
 //------------【BAR控件】
-/*---------------------
-	mode[0]		生长方向
-	mode[2:1]	外观类型
----------------------*/
-//mode[0]
+//mode[0]  生长方向
 #define DIREC_X		0x00	//x方向生长
 #define DIREC_Y		0x01	//y方向生长
-//mode[2:1]			 
+//mode[2:1]	外观类型		 
 #define PROGBAR 	0x00	//进度条
 #define SCALEBAR 	0x02	//刻度
 
 //------------【PICTURE控件】
+//附加功能
+#define GRID(x)		0x20|x	//mode[5]:网格开关，mode[4:0]网格间距(网格间距最大32像素)
+#define FRM			0x40	//mode[6]:边框开关
+#define REV			0x80	//mode[7]:反白开关
+
+
 
 
 //####################################【结构体定义】##########################################
@@ -32,7 +34,6 @@ typedef struct _CURSOR{
 	u8 viewport_width;		//视口宽度
 	u32 y_t;				//边界上坐标
 	u32	y_b;				//边界下坐标
-	u8 option_enable_list[OPTIONS_MAX];		//选项使能表,此处可以改进
 }CURSOR;					//光标类
 
 
@@ -70,7 +71,7 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf);				//文本编
 //---------------【自由式控件】
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode);		//条
 void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u16 val_num,s32 value[]);	//谱
-void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u8 mode);				//图
+void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode); //图	
 
 
 

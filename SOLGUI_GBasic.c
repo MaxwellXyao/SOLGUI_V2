@@ -137,7 +137,7 @@ void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
 	u32 x1,y1;
 	u8 i=0;
 	if(num<=0) return;		//没有点
-	if(1==num)						// 单点
+	if(1==num)				// 单点
 	{  
 		x0=*points++;
 		y0=*points;
