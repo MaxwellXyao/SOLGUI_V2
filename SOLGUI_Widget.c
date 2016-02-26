@@ -54,7 +54,7 @@ EDIT_IME *SOL_ASCII_IME=&SOL_ASCII_IME_REG;
 
 boolean _OptionsDisplay_Judge(u8 USN)
 {
-	if((USN-cursor->viewport_offset)>=0&&((USN-cursor->viewport_offset)<=cursor->viewport_width&&(!bit_istrue(SOLGUI_CSR,bit(1)))))	
+	if((USN-cursor->viewport_offset)>=0&&((USN-cursor->viewport_offset)<=cursor->viewport_width))	
 		return(True);	//显示选项	
 	else return(False);	 //不显示选项	
 }
@@ -147,6 +147,7 @@ void SOLGUI_Widget_GotoPage(u8 USN,MENU_PAGE *page)		//页面跳转控件
 {
 	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
+	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //--------【计算显示行】
@@ -181,9 +182,9 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 	static s8 spin_pos=0;	//旋钮位置
 	double dat_step=0;
 
-	s32 *v_l;
-	double *v_f;
-
+	s32 *v_l=NULL;			//指针使用前赋值
+	double *v_f=NULL;		//指针使用前赋值
+	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【参数过滤】
 	if(max<min)
 	{
@@ -248,19 +249,22 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 	}	
 }
 
-void SOLGUI_Widget_Text(u8 USN,const u8 *text)						//文本
+void SOLGUI_Widget_OptionText(u8 USN,const u8* str,...)					//选项文本
 {
+	va_list ap;
 	u32 y_disp=0;	//该选项应该显示的行位置
-	u8 t[SCREEN_X_PAGE-2];		//字符缓存
+//	u8 t[SCREEN_X_PAGE-2];		//字符缓存
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
-	_String_LenCtrlCpy(SCREEN_X_PAGE-2,t,(u8 *)text);
+//	_String_LenCtrlCpy(SCREEN_X_PAGE-2,t,(u8 *)str);
 //--------【计算显示行】
 	if(True==_OptionsDisplay_Judge(USN))
 	{		
 		y_disp=_OptionsDisplay_coorY(USN);
 //--------【选项绘制】
-		SOLGUI_printf(6,y_disp,F6X8,"%s",t);		//文本显示
+		va_start(ap,str);
+		__SOLGUI_printf(6,y_disp,F6X8,str,ap);		//文本显示
+		va_end(ap);
 	}
 }
 
@@ -269,6 +273,7 @@ void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void))				//按键
 	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
 	u8 run_f=0;		//运行记号
+	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //--------【计算显示行】
@@ -303,6 +308,7 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift)		//变
 	u32 y_disp=0;	//该选项应该显示的行位置
 	u8 cur_key=0;	//键值
 	u32 temp=bit(L_shift);
+	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【参数过滤】
 	if((L_shift<1)||(L_shift>32)) L_shift=1;	//小于1或大于32都划归为1
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
@@ -344,7 +350,7 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 	
 //--------【计算显示行】
-	if((USN-cursor->viewport_offset)>=0&&(USN-cursor->viewport_offset)<=cursor->viewport_width)
+	if(True==_OptionsDisplay_Judge(USN))
 	{		
 		y_disp=_OptionsDisplay_coorY(USN);
 		if(option_enable_list[USN]==1)
@@ -475,6 +481,17 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑
 
 //##############################【自由式控件】##############################
 
+void SOLGUI_Widget_Text(u32 x,u32 y,u8 mode,const u8* str,...)
+{
+	va_list ap;
+//--------【当前状态】
+	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
+//--------【文字输出】
+	va_start(ap,str);
+	__SOLGUI_printf(x,y,mode,str,ap); 		//使用内部版的printf来传递变长参数
+	va_end(ap);	
+}
+
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode)		//条
 {
 	s32 swap=0;
@@ -585,19 +602,32 @@ void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min
 void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode)	//带缩小适配的图片控件 
 {
 	float fw=0,fh=0;
+	u16 temp_x=0,temp_y=0;
+	u16 y_i=0,x_i=0;
+	u32 y0_t=y0+ysize;	//将原点改为左下角（原本原点为右上角）
+	u8 m1=0;
 //--------【当前状态】
 	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
-//------------【图片绘制】
-	if((xsize>=x_len)&&(ysize>=y_len)) SOLGUI_Pictrue(x0,y0,pic,x_len,y_len,mode);
+	m1=bit_isfalse(mode,bit(7));
+//------------【图片直出绘制】
+	if((xsize>=x_len)&&(ysize>=y_len)) 
+		SOLGUI_Pictrue(x0,y0,pic,x_len,y_len,m1);
 	else {
+//------------【图片适配大小绘制】
 		fw=(float)x_len/xsize; fh=(float)y_len/ysize;	//缩小比
-
-	};
-//------------【附加功能添加绘制】
-//-----【1.边框绘制】
-//	GUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
-//-----【2.网格】
-			
+		for(x_i=0;x_i<xsize;x_i++)
+		{
+			temp_x=(u16)(fw*x_i);		 //临近差值缩放算法
+			for(y_i=0;y_i<ysize;y_i++)
+			{
+				temp_y=(u16)(fh*y_i);		  
+			   	if(SOLGUI_GetPixel(temp_x,temp_y,pic,x_len,y_len)) SOLGUI_DrawPoint(x0+x_i,y0_t-y_i,m1);
+			   	else SOLGUI_DrawPoint(x0+x_i,y0_t-y_i,!m1);
+			}
+		}
+	};	
+//-----【边框绘制】
+	if(bit_istrue(mode,bit(6))) GUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
 }
 
 #endif

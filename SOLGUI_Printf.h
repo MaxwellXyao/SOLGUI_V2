@@ -1,6 +1,8 @@
 #ifndef SOLGUI_PRINTF_H
 #define SOLGUI_PRINTF_H
 
+#include<stdarg.h> 						//支持变长参数
+
 //##############################【参数宏】##############################
 //-------------【mode参数】
 //      F宽X高	值
@@ -27,7 +29,10 @@ typedef struct _FontInfo{
 	const u8 *Fontp;	//字符库指针
 }FontInfo;
 
+//###########################【内部使用】############################
+void __SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,va_list arp);		//SOLGUI内部使用的屏幕printf底层
 //##############################【API】##############################
+
 void SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,...);	//显示格式化字符串（mode：1正常显示，0高亮显示）
 
 #endif

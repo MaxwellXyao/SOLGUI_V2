@@ -17,12 +17,9 @@
 #define SCALEBAR 	0x02	//¿Ì¶È
 
 //------------¡¾PICTURE¿Ø¼þ¡¿
-//¸½¼Ó¹¦ÄÜ
-#define GRID(x)		0x20|x	//mode[5]:Íø¸ñ¿ª¹Ø£¬mode[4:0]Íø¸ñ¼ä¾à(Íø¸ñ¼ä¾à×î´ó32ÏñËØ)
+#define NML			0x00	//Õý³£ÎÞ¸½¼Ó
 #define FRM			0x40	//mode[6]:±ß¿ò¿ª¹Ø
 #define REV			0x80	//mode[7]:·´°×¿ª¹Ø
-
-
 
 
 //####################################¡¾½á¹¹Ìå¶¨Òå¡¿##########################################
@@ -63,7 +60,7 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num);				//¹â±
 //---------------¡¾Ñ¡ÏîÊ½¿Ø¼þ¡¿
 void SOLGUI_Widget_GotoPage(u8 USN,MENU_PAGE *page);								//Ò³ÃæÌø×ª
 void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void* value);	//Êý×ÖÐýÅ¥
-void SOLGUI_Widget_Text(u8 USN,const u8 *text);										//¾²Ì¬ÎÄ±¾
+void SOLGUI_Widget_OptionText(u8 USN,const u8* str,...);							//Ñ¡ÏîÎÄ±¾£¨Ì«³¤µÄÎÄ×Östr»áÕÚ¸Ç¹ö¶¯Ìõ£©
 void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void));				//°´¼ü
 void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift);			//±äÁ¿¿ª¹Ø£¨mem_valueÊÇÒ»¸öÍâ²¿ÉêÇëµÄ·ÇÒ×Ê§ÐÔ´æ´¢Æ÷±äÁ¿£©
 void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf);				//ÎÄ±¾±à¼­Æ÷£¨char_num¿ÉÐÞ¸Ä³¤¶È£©
@@ -71,8 +68,8 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf);				//ÎÄ±¾±à
 //---------------¡¾×ÔÓÉÊ½¿Ø¼þ¡¿
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode);		//Ìõ
 void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u16 val_num,s32 value[]);	//Æ×
-void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode); //Í¼	
-
+void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode); //Í¼Æ¬	
+void SOLGUI_Widget_Text(u32 x,u32 y,u8 mode,const u8* str,...);			//ÎÄ×Ö£¨ÔÚ¸Ã²ãÓ¦¾¡Á¿±ÜÃâµ÷ÓÃprintf£©
 
 
 #endif

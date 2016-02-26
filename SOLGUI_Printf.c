@@ -93,11 +93,9 @@ void SOLGUI_PutString(u32 x,u32 y,const u8 *str,u8 mode)	//显示字符串（mode：1正
 
 
 //##############################【API】##############################
-//----------------【在屏幕上格式化输出字符串】
 
-void SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,...)
+void __SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,va_list arp)		//SOLGUI内部使用的屏幕printf底层
 {
-	va_list arp;
 	u8 xpp=x;
 	u8 f,r,fl=0,l=3,lt;		//默认留3位小数,小数可留0~7位
 	u8 i,j,w,lp;
@@ -107,8 +105,6 @@ void SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,...)
 	s16 kh,kl,pow=1;
 	double k;
 	FontInfo fi=SOLGUI_SwitchFont(mode);
-
-	va_start(arp, str);								//变长参数栈始点在str
 
 	for (cc=res=0;cc!=-1;res+=cc) 		   			//解析格式化字符串，且输出
 	{
@@ -281,6 +277,16 @@ PRT:
 			xpp+=fi.FontWidth;										
 		}
 	}
+}
+
+
+//----------------【在屏幕上格式化输出字符串】
+void SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,...)			//外部使用的API版printf函数
+{
+	va_list arp;
+	va_start(arp,str);								//变长参数栈始点在str
+	__SOLGUI_printf(x,y,mode,str,arp);				//调用底层
 	va_end(arp);
 }
+
 
