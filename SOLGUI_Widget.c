@@ -481,14 +481,14 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑
 
 //##############################【自由式控件】##############################
 
-void SOLGUI_Widget_Text(u32 x,u32 y,u8 mode,const u8* str,...)
+void SOLGUI_Widget_Text(u32 x0,u32 y0,u8 mode,const u8* str,...)
 {
 	va_list ap;
 //--------【当前状态】
 	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【文字输出】
 	va_start(ap,str);
-	__SOLGUI_printf(x,y,mode,str,ap); 		//使用内部版的printf来传递变长参数
+	__SOLGUI_printf(x0,y0,mode,str,ap); 		//使用内部printf来传递变长参数
 	va_end(ap);	
 }
 
@@ -592,11 +592,22 @@ void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u1
 	}	
 }
 
-void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value)
+void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,WaveMemBlk *wmb)	  //波，要通过探针输入数据更新
 {
 //--------【当前状态】
 	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
-//	SOLGUI_Widget_Spectrum(x0,y0,xsize,ysize,max,min,val_num,value[]);
+//--------【绘图】
+	SOLGUI_Widget_Spectrum(x0,y0,xsize,ysize,max,min,wmb->size,wmb->mem);	//调用谱绘制波形
+}
+
+void SOLGUI_Oscillogram_Probe(WaveMemBlk *wmb,s32 value)									//探针
+{
+	u16 f=0,b=1;
+//--------【数据队列操作】					//这里有改进空间
+	for(f=0,b=1;b<wmb->size;f++,b++){
+		wmb->mem[f]=wmb->mem[b];				//数组移位,O(n)
+	}
+	wmb->mem[wmb->size-1]=value;				//末尾添加新数据	
 }
 
 void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode)	//带缩小适配的图片控件 
@@ -617,7 +628,7 @@ void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x
 		fw=(float)x_len/xsize; fh=(float)y_len/ysize;	//缩小比
 		for(x_i=0;x_i<xsize;x_i++)
 		{
-			temp_x=(u16)(fw*x_i);		 //临近差值缩放算法
+			temp_x=(u16)(fw*x_i);		 //临近插值缩放算法
 			for(y_i=0;y_i<ysize;y_i++)
 			{
 				temp_y=(u16)(fh*y_i);		  

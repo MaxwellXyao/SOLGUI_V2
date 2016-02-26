@@ -52,9 +52,28 @@ typedef struct _EDIT_IME{
 }EDIT_IME;					//输入法字符集结构体
 
 
+//------------【Oscillogram控件】
+typedef struct _WaveMemBlk{
+	u16 size;				//储存点数（数组大小）
+	s32	*mem; 				//存放点数组的内存地址
+}WaveMemBlk;				//波形数据储存块
 
+/*
+空间申请范例:
+	s32 test_mem[128];						
+	WaveMemBlk _wave_test1={128,test_mem};
+	WaveMemBlk *wave_test1=&_wave_test1;
+
+也可以用下面的宏来申请：W_macro(变量名,大小)
+*/
+//------------【自动申请内存宏】
+#define W_macro(name,size) \
+s32 _##name##_mem[size];	\
+WaveMemBlk _##name={size,_##name##_mem};\
+WaveMemBlk *##name=&_##name;
 
 //####################################【API】##########################################
+//---------------【光标】
 void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num);				//光标（上边界行，下边界行，选项个数）
 
 //---------------【选项式控件】
@@ -66,10 +85,13 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift);			//
 void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf);				//文本编辑器（char_num可修改长度）
 
 //---------------【自由式控件】
+void SOLGUI_Widget_Text(u32 x0,u32 y0,u8 mode,const u8* str,...);			//文字（在该层应尽量避免调用printf）
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode);		//条
 void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u16 val_num,s32 value[]);	//谱
+void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,WaveMemBlk *wmb);  //波，要通过波探针输入数据更新
 void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode); //图片	
-void SOLGUI_Widget_Text(u32 x,u32 y,u8 mode,const u8* str,...);			//文字（在该层应尽量避免调用printf）
 
+//---------------【附件】
+void SOLGUI_Oscillogram_Probe(WaveMemBlk *wmb,s32 value);											//波探针
 
 #endif
