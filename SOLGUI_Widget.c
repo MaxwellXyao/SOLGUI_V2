@@ -2,28 +2,10 @@
 #include<string.h>
 #include<stdarg.h> 						//支持变长参数
 
-#if MENU_FRAME_EN==1
+
+
 //##############################【变量定义】##############################
-/*选项编号向下生长：
-   >option0
-	option1
-	option2
-	...
-*/
-//-----------【光标类】
-CURSOR cursor_reg={0,0,0,0,0,0};
-CURSOR *cursor=&cursor_reg;			//光标全局信息记载
-
-//-----------【选项使能表】
-u8 option_enable_list[OPTIONS_MAX];	//选项使能表,此处可以改进
-
-//-----------【GotoPage控件】
-extern MENU_PAGE *current_page;		//当前页面
-//-----------【占用标志寄存器】
-extern u8 SOLGUI_CSR;		//设置模式控制寄存器
-
-
-
+#if WIDGET_EDIT_EN==1&&MENU_FRAME_EN==1
 
 //-----------【EDIT】
 const u8 SOL_ASCII_IME_lowerchar[]	="abcdefghijklmnopqrstuvwxyz";
@@ -50,6 +32,29 @@ EDIT_IME SOL_ASCII_IME_REG={		//简易ascii输入法
 
 EDIT_IME *SOL_ASCII_IME=&SOL_ASCII_IME_REG;
 
+#endif
+
+
+#if MENU_FRAME_EN==1
+/*选项编号向下生长：
+   >option0
+	option1
+	option2
+	...
+*/
+//-----------【光标类】
+CURSOR cursor_reg={0,0,0,0,0,0};
+CURSOR *cursor=&cursor_reg;			//光标全局信息记载
+
+//-----------【选项使能表】
+u8 option_enable_list[OPTIONS_MAX];	//选项使能表,此处可以改进
+
+//-----------【GotoPage控件】
+extern MENU_PAGE *current_page;		//当前页面
+
+//-----------【占用标志寄存器】
+extern u8 SOLGUI_CSR;		//设置模式控制寄存器
+
 //################################【内部调用函数】##############################
 
 boolean _OptionsDisplay_Judge(u8 USN)
@@ -63,28 +68,6 @@ u32 _OptionsDisplay_coorY(u8 USN)
 {
 	return((cursor->row_start-USN+cursor->viewport_offset)*8);
 }
-
-void _String_LenCtrlCpy(u16 dest_size,u8 *dest,u8 *sour)
-{
-	if(strlen((const char *)sour)>dest_size) strncpy((char *)dest,(char *)sour,dest_size);	//带字数限制的复制 
-	else strcpy((char *)dest,(char *)sour);	//向下更新buf
-}
-
-double _Pow_10(s8 n) 	//pow=10^n
-{
-	s16 i=0;
-	s8 m=(n>=0)?n:-n;
-	double p=1;
-
-	for(i=0;i<m;i++)
-	{
-		if(n>=0) p*=10;
-		else p*=0.1;
-	}
-	return(p);
-}
-
-
 
 //################################【光标】##############################
 //选项式控件必须有光标才能操作
@@ -130,7 +113,7 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num)		//光标（
 //---【上下边线】
 	if(rowBorder_Top!=6) SOLGUI_GBasic_Line(0,cursor->y_t+8,SCREEN_X_WIDTH-1,cursor->y_t+8,DOTTED);		//上边线
 	if(rowBorder_Top!=0) SOLGUI_GBasic_Line(0,cursor->y_b-1,SCREEN_X_WIDTH-1,cursor->y_b-1,DOTTED);		//下边线
-//---【滚动条】（可以作为选择添加的美化部分）
+//---【滚动条】（可以作为选择添加的部分）
 	s_h=(double)(cursor->y_t-cursor->y_b+8)/(double)option_num;									//滑块高度
 	s_y=cursor->y_t+7-s_h*(cursor_abs_offset+1);										//滑块位置
 	GUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,s_y,SCREEN_X_WIDTH-1,s_y+s_h,FILL);	//滑块
@@ -141,7 +124,12 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num)		//光标（
 	}
 }
 
+#endif
+
 //##############################【选项式控件】##############################
+
+
+#if WIDGET_GOTOPAGE_EN==1&&MENU_FRAME_EN==1
 
 void SOLGUI_Widget_GotoPage(u8 USN,MENU_PAGE *page)		//页面跳转控件
 {
@@ -171,6 +159,25 @@ void SOLGUI_Widget_GotoPage(u8 USN,MENU_PAGE *page)		//页面跳转控件
 		if((cursor->viewport_offset+cursor->cursor_rel_offset)==USN)
 		SOLGUI_printf(SCREEN_X_WIDTH-6,56,F6X8,"%c",ICON_OK);	//操作指示（根据键值解析部分来编写）
 	}
+}
+
+#endif
+
+
+#if WIDGET_SPIN_EN==1&&MENU_FRAME_EN==1
+
+double _Pow_10(s8 n) 	//pow=10^n
+{
+	s16 i=0;
+	s8 m=(n>=0)?n:-n;
+	double p=1;
+
+	for(i=0;i<m;i++)
+	{
+		if(n>=0) p*=10;
+		else p*=0.1;
+	}
+	return(p);
 }
 
 void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void* value)		//数字旋钮控件
@@ -249,6 +256,12 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 	}	
 }
 
+#endif
+
+
+
+#if WIDGET_OPTIONTEXT_EN==1&&MENU_FRAME_EN==1
+
 void SOLGUI_Widget_OptionText(u8 USN,const u8* str,...)					//选项文本
 {
 	va_list ap;
@@ -267,6 +280,11 @@ void SOLGUI_Widget_OptionText(u8 USN,const u8* str,...)					//选项文本
 		va_end(ap);
 	}
 }
+
+#endif
+
+
+#if WIDGET_BUTTON_EN==1&&MENU_FRAME_EN==1
 
 void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void))				//按键
 {
@@ -303,6 +321,12 @@ void SOLGUI_Widget_Button(u8 USN,const u8 *name,void (*func)(void))				//按键
 	}
 }
 
+#endif
+
+
+
+#if WIDGET_SWITCH_EN==1&&MENU_FRAME_EN==1
+
 void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift)		//变量开关（mem_value是一个外部申请的非易失性存储器变量）
 {
 	u32 y_disp=0;	//该选项应该显示的行位置
@@ -335,6 +359,16 @@ void SOLGUI_Widget_Switch(u8 USN,const u8 *name,u32 *mem_value,u8 L_shift)		//变
 	}	
 }
 
+#endif
+
+
+#if WIDGET_EDIT_EN==1&&MENU_FRAME_EN==1
+
+void _String_LenCtrlCpy(u16 dest_size,u8 *dest,u8 *sour)		  	//带字数限制的复制
+{
+	if(strlen((const char *)sour)>dest_size) strncpy((char *)dest,(char *)sour,dest_size);	 
+	else strcpy((char *)dest,(char *)sour);	
+}
 
 void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑器
 {	
@@ -479,7 +513,11 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑
 	}	
 }
 
+#endif
+
 //##############################【自由式控件】##############################
+
+#if WIDGET_TEXT_EN==1&&MENU_FRAME_EN==1
 
 void SOLGUI_Widget_Text(u32 x0,u32 y0,u8 mode,const u8* str,...)
 {
@@ -491,6 +529,11 @@ void SOLGUI_Widget_Text(u32 x0,u32 y0,u8 mode,const u8* str,...)
 	__SOLGUI_printf(x0,y0,mode,str,ap); 		//使用内部printf来传递变长参数
 	va_end(ap);	
 }
+
+#endif
+
+
+#if WIDGET_BAR_EN==1&&MENU_FRAME_EN==1
 
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode)		//条
 {
@@ -546,6 +589,11 @@ void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 val
 	}
 }
 
+#endif
+
+
+#if MENU_FRAME_EN==1&&(WIDGET_SPECTRUM_EN==1||WIDGET_OSCILLOGRAM_EN==1)
+
 void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u16 val_num,s32 value[])
 {
 	s32 swap=0;
@@ -592,6 +640,11 @@ void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u1
 	}	
 }
 
+#endif
+
+
+#if WIDGET_OSCILLOGRAM_EN==1&&MENU_FRAME_EN==1
+
 void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,WaveMemBlk *wmb)	  //波，要通过探针输入数据更新
 {
 //--------【当前状态】
@@ -609,6 +662,11 @@ void SOLGUI_Oscillogram_Probe(WaveMemBlk *wmb,s32 value)									//探针
 	}
 	wmb->mem[wmb->size-1]=value;				//末尾添加新数据	
 }
+
+#endif
+
+
+#if WIDGET_PICTURE_EN==1&&MENU_FRAME_EN==1
 
 void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode)	//带缩小适配的图片控件 
 {
@@ -642,7 +700,6 @@ void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x
 }
 
 #endif
-
 
 
 

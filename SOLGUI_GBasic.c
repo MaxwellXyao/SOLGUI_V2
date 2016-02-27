@@ -1,6 +1,6 @@
 #include"SOLGUI_Include.h"
 
-
+#if GBASIC_LINE_EN==1||MENU_FRAME_EN==1
 
 void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//»­Ïß£¨mode£º0²Á³ýÏß£¬1ÊµÏß£¬2µãÏß£¬3¶Ì»®Ïß£©
 {
@@ -78,6 +78,37 @@ void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//»­Ïß£¨mode£º
 	}   
 }
 
+void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
+{
+	u32 x0,y0;
+	u32 x1,y1;
+	u8 i=0;
+	if(num<=0) return;		//Ã»ÓÐµã
+	if(1==num)				// µ¥µã
+	{  
+		x0=*points++;
+		y0=*points;
+		SOLGUI_DrawPoint(x0,y0,1);
+	}
+   /* »­¶àÌõÏßÌõ */
+	x0=*points++;					// È¡³öµÚÒ»µã×ø±êÖµ£¬×÷ÎªÔ­Æðµã×ø±êÖµ
+	y0=*points++;
+	for(i=1;i<num;i++)
+	{  
+		x1=*points++;				// È¡³öÏÂÒ»µã×ø±êÖµ
+		y1=*points++;
+		SOLGUI_GBasic_Line(x0,y0,x1,y1,mode);
+		x0=x1;					// ¸üÐÂÔ­Æðµã×ø±ê
+		y0=y1;
+	}
+
+}
+
+#endif
+
+
+#if GBASIC_RECTANGLE_EN==1||MENU_FRAME_EN==1
+
 void  GUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode)		//»­¾ØÐÎ£¨×óÏÂ½Ç£¬ÓÒÉÏ½Ç£¬Ä£Ê½£©
 {
 	u32 i=0;
@@ -113,31 +144,10 @@ void  GUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode)		//»­¾ØÐÎ£¨×óÏÂ½
 	}
 }
 
-void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
-{
-	u32 x0,y0;
-	u32 x1,y1;
-	u8 i=0;
-	if(num<=0) return;		//Ã»ÓÐµã
-	if(1==num)				// µ¥µã
-	{  
-		x0=*points++;
-		y0=*points;
-		SOLGUI_DrawPoint(x0,y0,1);
-	}
-   /* »­¶àÌõÏßÌõ */
-	x0=*points++;					// È¡³öµÚÒ»µã×ø±êÖµ£¬×÷ÎªÔ­Æðµã×ø±êÖµ
-	y0=*points++;
-	for(i=1;i<num;i++)
-	{  
-		x1=*points++;				// È¡³öÏÂÒ»µã×ø±êÖµ
-		y1=*points++;
-		SOLGUI_GBasic_Line(x0,y0,x1,y1,mode);
-		x0=x1;					// ¸üÐÂÔ­Æðµã×ø±ê
-		y0=y1;
-	}
+#endif
 
-}
+
+#if GBASIC_CIRCLE_EN==1||MENU_FRAME_EN==1
 						                        
 void SOLGUI_GBasic_Circle(u32 x0,u32 y0,u32 r,u8 mode)
 {
@@ -180,5 +190,5 @@ void SOLGUI_GBasic_Circle(u32 x0,u32 y0,u32 r,u8 mode)
 	}
 }
 
-
+#endif
 

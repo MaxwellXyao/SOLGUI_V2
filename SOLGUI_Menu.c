@@ -3,6 +3,7 @@
 
 
 #if MENU_FRAME_EN==1
+
 //##############################【全局变量定义】##############################
 MENU_PAGE *current_page;//当前页面
 GUI_FIFO _key_cache;	//键值FIFO
