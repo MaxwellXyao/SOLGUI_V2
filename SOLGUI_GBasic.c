@@ -81,45 +81,27 @@ void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//画线（mode：
 void  GUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode)		//画矩形（左下角，右上角，模式）
 {
 	u32 i=0;
+	u8 m=0;
 	if(bit_istrue(mode,bit(2))||(mode==DELETE))	//是否填充
 	{
 		if(x0>x1) {i=x0;x0=x1;x1=i;}	//若x0>x1，则x0与x1交换
 		if(y0>y1) {i=y0;y0=y1;y1=i;}	//若y0>y1，则y0与y1交换
-		if(mode==DELETE)
-		{
-			if(y0==y1) 
-			{  
-				SOLGUI_GBasic_Line(x0,y0,x1,y0,DELETE);
-				return;
-			}
-			if(x0==x1) 
-			{  
-				SOLGUI_GBasic_Line(x0,y0,x0,y1,DELETE);
-				return;
-			}						
-			while(y0<=y1)						
-			{  
-				SOLGUI_GBasic_Line(x0,y0,x1,y0,DELETE);
-				y0++;				
-			}
+		if(mode==DELETE) m=DELETE;
+		else m=ACTUAL;
+		if(y0==y1) 
+		{  
+			SOLGUI_GBasic_Line(x0,y0,x1,y0,m);
+			return;
 		}
-		else
-		{
-			if(y0==y1) 
-			{  
-				SOLGUI_GBasic_Line(x0,y0,x1,y0,ACTUAL);
-				return;
-			}
-			if(x0==x1) 
-			{  
-				SOLGUI_GBasic_Line(x0,y0,x0,y1,ACTUAL);
-				return;
-			}						
-			while(y0<=y1)						
-			{  
-				SOLGUI_GBasic_Line(x0,y0,x1,y0,ACTUAL);
-				y0++;				
-			}	
+		if(x0==x1) 
+		{  
+			SOLGUI_GBasic_Line(x0,y0,x0,y1,m);
+			return;
+		}						
+		while(y0<=y1)						
+		{  
+			SOLGUI_GBasic_Line(x0,y0,x1,y0,m);
+			y0++;				
 		}
 	}
 	else			   //非填充
@@ -143,7 +125,6 @@ void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
 		y0=*points;
 		SOLGUI_DrawPoint(x0,y0,1);
 	}
-   
    /* 画多条线条 */
 	x0=*points++;					// 取出第一点坐标值，作为原起点坐标值
 	y0=*points++;
@@ -157,103 +138,46 @@ void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
 	}
 
 }
-
-void SOLGUI_GBasic_Circle(u32 x0,u32 y0,u32 r,u8 mode)			//画圆（圆心，半径，1点亮0熄灭）
+						                        
+void SOLGUI_GBasic_Circle(u32 x0,u32 y0,u32 r,u8 mode)
 {
-	s32  draw_x0, draw_y0;			// 刽图点坐标变量
-	s32  draw_x1, draw_y1;	
-	s32  draw_x2, draw_y2;	
-	s32  draw_x3, draw_y3;	
-	s32  draw_x4, draw_y4;	
-	s32  draw_x5, draw_y5;	
-	s32  draw_x6, draw_y6;	
-	s32  draw_x7, draw_y7;	
-	s32  xx, yy;					// 画圆控制变量
-	s32  di;						// 决策变量
-   
-   /* 参数过滤 */
-   if(0==r) return;
-   
-   /* 计算出8个特殊点(0、45、90、135、180、225、270度)，进行显示 */
-   draw_x0 = draw_x1 = x0;
-   draw_y0 = draw_y1 = y0 + r;
-   if(draw_y0<SCREEN_Y_WIDTH) SOLGUI_DrawPoint(draw_x0,draw_y0,mode);	// 90度
+	u16 x=0,y=r;
+	s16 delta,temp;
 	
-   draw_x2 = draw_x3 = x0;
-   draw_y2 = draw_y3 = y0 - r;
-   if(draw_y2>=0) SOLGUI_DrawPoint(draw_x2,draw_y2,mode);			// 270度
-   
-	
-   draw_x4 = draw_x6 = x0 + r;
-   draw_y4 = draw_y6 = y0;
-   if(draw_x4<SCREEN_X_WIDTH) SOLGUI_DrawPoint(draw_x4,draw_y4,mode);	// 0度
-   
-   draw_x5 = draw_x7 = x0 - r;
-   draw_y5 = draw_y7 = y0;
-   if(draw_x5>=0) SOLGUI_DrawPoint(draw_x5,draw_y5,mode);			// 180度   
-   if(1==r) return;					// 若半径为1，则已圆画完
-   
-   
-   /* 使用Bresenham法进行画圆 */
-   di = 3 - 2*r;					// 初始化决策变量
-   
-   xx = 0;
-   yy = r;	
-   while(xx<yy)
-   {  if(di<0)
-	  {  di += 4*xx + 6;	      
-	  }
-	  else
-	  {  di += 4*(xx - yy) + 10;
-	  
-	     yy--;	  
-		 draw_y0--;
-		 draw_y1--;
-		 draw_y2++;
-		 draw_y3++;
-		 draw_x4--;
-		 draw_x5++;
-		 draw_x6--;
-		 draw_x7++;	 	
-	  }
-	  
-	  xx++;   
-	  draw_x0++;
-	  draw_x1--;
-	  draw_x2++;
-	  draw_x3--;
-	  draw_y4++;
-	  draw_y5++;
-	  draw_y6--;
-	  draw_y7--;
-		
-	
-	  /* 要判断当前点是否在有效范围内 */
-	  if( (draw_x0<=SCREEN_X_WIDTH)&&(draw_y0>=0) )	
-	  {  SOLGUI_DrawPoint(draw_x0, draw_y0,mode);
-	  }	    
-	  if( (draw_x1>=0)&&(draw_y1>=0) )	
-	  {  SOLGUI_DrawPoint(draw_x1, draw_y1,mode);
-	  }
-	  if( (draw_x2<=SCREEN_X_WIDTH)&&(draw_y2<=SCREEN_Y_WIDTH) )	
-	  {  SOLGUI_DrawPoint(draw_x2, draw_y2,mode);   
-	  }
-	  if( (draw_x3>=0)&&(draw_y3<=SCREEN_Y_WIDTH) )	
-	  {  SOLGUI_DrawPoint(draw_x3, draw_y3,mode);
-	  }
-	  if( (draw_x4<=SCREEN_X_WIDTH)&&(draw_y4>=0) )	
-	  {  SOLGUI_DrawPoint(draw_x4, draw_y4,mode);
-	  }
-	  if( (draw_x5>=0)&&(draw_y5>=0) )	
-	  {  SOLGUI_DrawPoint(draw_x5, draw_y5,mode);
-	  }
-	  if( (draw_x6<=SCREEN_X_WIDTH)&&(draw_y6<=SCREEN_Y_WIDTH) )	
-	  {  SOLGUI_DrawPoint(draw_x6, draw_y6,mode);
-	  }
-	  if( (draw_x7>=0)&&(draw_y7<=SCREEN_Y_WIDTH) )	
-	  {  SOLGUI_DrawPoint(draw_x7, draw_y7,mode);
-	  }
-   }	
+	delta = 3-(r<<1);  //3-r*2
+	while(y>x)
+	{
+		if(mode==FILL)
+		{
+			SOLGUI_GBasic_Line(x0+x,y0+y,x0-x,y0+y,ACTUAL);
+			SOLGUI_GBasic_Line(x0+x,y0-y,x0-x,y0-y,ACTUAL);
+			SOLGUI_GBasic_Line(x0+y,y0+x,x0-y,y0+x,ACTUAL);
+			SOLGUI_GBasic_Line(x0+y,y0-x,x0-y,y0-x,ACTUAL);
+		}
+		else
+		{
+			SOLGUI_DrawPoint(x0+x,y0+y,mode);
+			SOLGUI_DrawPoint(x0-x,y0+y,mode);
+			SOLGUI_DrawPoint(x0+x,y0-y,mode);
+			SOLGUI_DrawPoint(x0-x,y0-y,mode);
+			SOLGUI_DrawPoint(x0+y,y0+x,mode);
+			SOLGUI_DrawPoint(x0-y,y0+x,mode);
+			SOLGUI_DrawPoint(x0+y,y0-x,mode);
+			SOLGUI_DrawPoint(x0-y,y0-x,mode);
+		}
+		x++;
+		if(delta >= 0)
+		{
+			y--;
+			temp= (x<<2); //x*4
+			temp-=(y<<2); //y*4
+			delta += (temp+10);
+		}
+		else
+		{
+			delta += ((x<<2)+6); //x*4 + 6
+		}
+	}
 }
 
 

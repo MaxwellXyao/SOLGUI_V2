@@ -12,6 +12,43 @@ typedef struct __MENU_PAGE{									//菜单/函数类型
 	void (*pageFunc)();										//页面函数指针
 }MENU_PAGE;
 
+//可以用下方的自动化宏来定义页面
+
+//------------【自动化宏】
+#define __M_PAGE(name,pageTitle,parentPage,Program)	\
+void _##name(){Program}								\
+MENU_PAGE name={pageTitle,parentPage,_##name};
+
+/*用法:
+正常：
+void _sub()
+{
+	SOLGUI_Cursor(0,1,8);
+	SOLGUI_Widget_GotoPage(0,&test1);
+	SOLGUI_Widget_Edit(2,"edit",1,test_str);								//文本编辑器
+	SOLGUI_Widget_Spin(1,"t",INTEGRAL,-1000,1000,&t);
+	SOLGUI_Widget_Spin(3,"t1",DECIMAL,1000,-1000,&t1);							 
+}
+MENU_PAGE sub={
+	"sub_page",
+	&index,
+	_sub
+};
+
+对应的自动化宏：
+__M_MALLOC_PAGE(sub,"sub",index,
+{
+	SOLGUI_Cursor(0,1,8);
+	SOLGUI_Widget_GotoPage(0,&test1);
+	SOLGUI_Widget_Edit(2,"edit",1,test_str);								//文本编辑器
+	SOLGUI_Widget_Spin(1,"t",INTEGRAL,-1000,1000,&t);
+	SOLGUI_Widget_Spin(3,"t1",DECIMAL,1000,-1000,&t1);
+});
+
+
+*/
+
+
 //####################################【FIFO】##############################
 //使用FIFO增强多任务异步情况下的稳定性
 typedef struct __GUI_FIFO{

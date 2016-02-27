@@ -64,11 +64,11 @@ typedef struct _WaveMemBlk{
 	WaveMemBlk _wave_test1={128,test_mem};
 	WaveMemBlk *wave_test1=&_wave_test1;
 
-也可以用下面的宏来申请：W_macro(变量名,大小)
+也可以用下面的宏来申请：__M_MALLOC_WMB(名,大小)
 */
-//------------【自动申请内存宏】
-#define W_macro(name,size) \
-s32 _##name##_mem[size];	\
+//------------【自动化宏】
+#define __M_WMB_MALLOC(name,size) 		\
+s32 _##name##_mem[size];				\
 WaveMemBlk _##name={size,_##name##_mem};\
 WaveMemBlk *##name=&_##name;
 
