@@ -31,8 +31,10 @@ typedef struct _FontInfo{
 
 //###########################【内部使用】############################
 void __SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,va_list arp);		//SOLGUI内部使用的屏幕printf底层
-//##############################【API】##############################
 
+
+
+//##############################【API】##############################
 void SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,...);	//显示格式化字符串（mode：1正常显示，0高亮显示）
 
 #endif

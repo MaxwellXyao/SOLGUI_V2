@@ -36,13 +36,9 @@ MENU_PAGE sub={
 };
 
 对应的自动化宏：
-__M_MALLOC_PAGE(sub,"sub",index,
+__M_PAGE(页面变量名,页面标题,父页面地址,
 {
-	SOLGUI_Cursor(0,1,8);
-	SOLGUI_Widget_GotoPage(0,&test1);
-	SOLGUI_Widget_Edit(2,"edit",1,test_str);								//文本编辑器
-	SOLGUI_Widget_Spin(1,"t",INTEGRAL,-1000,1000,&t);
-	SOLGUI_Widget_Spin(3,"t1",DECIMAL,1000,-1000,&t1);
+	/////////////此处编写页面函数////////////
 });
 
 

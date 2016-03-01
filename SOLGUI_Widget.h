@@ -64,7 +64,7 @@ typedef struct _WaveMemBlk{
 	WaveMemBlk _wave_test1={128,test_mem};
 	WaveMemBlk *wave_test1=&_wave_test1;
 
-也可以用下面的宏来申请：__M_MALLOC_WMB(名,大小)
+也可以用下面的宏来申请：__M_WMB_MALLOC(名,大小)
 */
 //------------【自动化宏】
 #define __M_WMB_MALLOC(name,size) 		\
@@ -88,7 +88,7 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf);				//文本编
 void SOLGUI_Widget_Text(u32 x0,u32 y0,u8 mode,const u8* str,...);			//文字（在该层应尽量避免调用printf）
 void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 value,u8 mode);		//条
 void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u16 val_num,s32 value[]);	//谱
-void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,WaveMemBlk *wmb);  //波，要通过波探针输入数据更新
+void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,WaveMemBlk *wmb);  //波显示，要通过波探针输入数据更新
 void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x_len,u32 y_len,u8 mode); //图片	
 
 //---------------【附件】

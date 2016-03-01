@@ -244,12 +244,12 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 			}				
 		}
 //--------【选项：变量名&数值绘制】
-		SOLGUI_printf(6,y_disp,F6X8,"%s",name);		//变量名
 		if(type==DECIMAL) SOLGUI_printf(68,y_disp,F6X8,"%f",*v_f);	//数值		
 		else SOLGUI_printf(68,y_disp,F6X8,"%d",*v_l);	//数值						
 //--------【旋钮绘制】
 		if(bit_istrue(SOLGUI_CSR,bit(0))&&(option_enable_list[USN]==1)) 
 		SOLGUI_printf(0,y_disp,~F6X8,"%c%f%c",ICON_LEFT,dat_step,ICON_RIGHT);	   	//如果处于设置模式中，显示旋钮数值
+		else SOLGUI_printf(6,y_disp,F6X8,"%s",name);		//变量名
 //--------【操作提示绘制】
 		if((cursor->viewport_offset+cursor->cursor_rel_offset)==USN)
 		SOLGUI_printf(SCREEN_X_WIDTH-6,56,F6X8,"%c",ICON_OK);			//操作指示（根据键值解析部分来编写）
