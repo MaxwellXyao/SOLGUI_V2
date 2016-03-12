@@ -19,9 +19,9 @@
 #define FONT8X10_EN				0	 		//允许使用8x10字体
 
 //--------------【基础图形库开关】
-#define GBASIC_LINE_EN			1			//允许使用直线绘制
-#define GBASIC_RECTANGLE_EN		1			//允许使用矩形绘制
-#define GBASIC_CIRCLE_EN		1			//允许使用圆形绘制
+#define GBASIC_LINE_EN			0			//允许使用直线绘制
+#define GBASIC_RECTANGLE_EN		0			//允许使用矩形绘制
+#define GBASIC_CIRCLE_EN		0			//允许使用圆形绘制
 
 
 
@@ -37,28 +37,28 @@
 #define WIDGET_OPTIONTEXT_EN 	1				//允许使用控件：OptionText选项文本
 #define WIDGET_BUTTON_EN 		1				//允许使用控件：Button按键
 #define WIDGET_SWITCH_EN		1				//允许使用控件：Switch复选开关
-#define WIDGET_EDIT_EN 			1				//允许使用控件：Edit文本编辑
+#define WIDGET_EDIT_EN 			0				//允许使用控件：Edit文本编辑
 										 	
 #define WIDGET_TEXT_EN 			1				//允许使用控件：Text文字
-#define WIDGET_BAR_EN 			1				//允许使用控件：Bar条
-#define WIDGET_SPECTRUM_EN 		1				//允许使用控件：Spectrum谱
-#define WIDGET_OSCILLOGRAM_EN 	1				//允许使用控件：Oscillogram波形
-#define WIDGET_PICTURE_EN		1				//允许使用控件：Picture图
+#define WIDGET_BAR_EN 			0				//允许使用控件：Bar条
+#define WIDGET_SPECTRUM_EN 		0				//允许使用控件：Spectrum谱
+#define WIDGET_OSCILLOGRAM_EN 	0				//允许使用控件：Oscillogram波形
+#define WIDGET_PICTURE_EN		0				//允许使用控件：Picture图
 
 //--------------【选项最大数目】
-#define OPTIONS_MAX				16				//每页最大可以存放的选项数（不可设置太大）
+#define OPTIONS_MAX				16				//每页最大可以容纳的选项数（不可设置太大）
 
 //--------------【FIFO键值缓存大小】
 #define FIFOBUF_SIZE			5				//可以缓存的键值数（默认即可）
 
-//--------------【系统返回的按键键值】
+//--------------【键值对应行为设置】
 /*---------用户需根据系统按键返回的键值来进行设定---------*/
-#define	SOLGUI_KEY_UP			0x50			//上键键值
-#define SOLGUI_KEY_DOWN			0x20			//下键键值
-#define	SOLGUI_KEY_LEFT			0x30			//左键键值
-#define SOLGUI_KEY_RIGHT		0x10			//右键键值
-#define SOLGUI_KEY_OK			0x40 			//OK键键值
-#define	SOLGUI_KEY_BACK			0x60			//返回键键值
+#define	SOLGUI_KEY_UP			0x50			//上
+#define SOLGUI_KEY_DOWN			0x20			//下
+#define	SOLGUI_KEY_LEFT			0x30			//左
+#define SOLGUI_KEY_RIGHT		0x10			//右
+#define SOLGUI_KEY_OK			0x40 			//确认
+#define	SOLGUI_KEY_BACK			0x60			//返回
 
 //--------------【系统图标设置】
 /*---------如果用户不添加自定义图标，此处默认即可，不需修改---------*/

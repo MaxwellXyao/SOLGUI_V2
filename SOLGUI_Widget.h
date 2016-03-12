@@ -4,8 +4,12 @@
 //##################################【mode宏定义】########################################
 
 //------------【SPIN控件】
-#define INTEGRAL	0x00	//整数的		
-#define DECIMAL		0x01	//小数的
+#define INT8	0x00
+#define UINT8	0x01	
+#define INT16	0x02	
+#define INT32	0x03	
+#define FLT16	0x04	
+#define FLT32	0x05			
 
 
 //------------【BAR控件】

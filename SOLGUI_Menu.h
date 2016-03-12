@@ -53,8 +53,10 @@ typedef struct __GUI_FIFO{
 	u8 Write;												//缓冲区写指针
 }GUI_FIFO;													//FIFO类			
 
-//####################################【API】##########################################
+//####################################【内部使用】##########################################
 void SOLGUI_Menu_SetHomePage(MENU_PAGE *home_page);	//首页定义
+
+//####################################【API】##########################################
 void SOLGUI_InputKey(u8 key_value); 				//【非阻塞】从系统中获取当前按键键值存入键池
 u8 	 SOLGUI_GetCurrentKey(void); 					//【非阻塞】获取GUI当前的全局键值
 void SOLGUI_Menu_PageStage(void);					//【非阻塞】SOLGUI前台页面切换器

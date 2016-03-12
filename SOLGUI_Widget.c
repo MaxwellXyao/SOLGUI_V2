@@ -116,8 +116,8 @@ void SOLGUI_Cursor(u8 rowBorder_Top,u8 rowBorder_Bottom,u8 option_num)		//光标（
 //---【滚动条】（可以作为选择添加的部分）
 	s_h=(double)(cursor->y_t-cursor->y_b+8)/(double)option_num;									//滑块高度
 	s_y=cursor->y_t+7-s_h*(cursor_abs_offset+1);										//滑块位置
-	GUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,s_y,SCREEN_X_WIDTH-1,s_y+s_h,FILL);	//滑块
-	GUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,cursor->y_b,SCREEN_X_WIDTH-1,cursor->y_t+7,ACTUAL);	//边框
+	SOLGUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,s_y,SCREEN_X_WIDTH-1,s_y+s_h,FILL);	//滑块
+	SOLGUI_GBasic_Rectangle(SCREEN_X_WIDTH-4,cursor->y_b,SCREEN_X_WIDTH-1,cursor->y_t+7,ACTUAL);	//边框
 //--------【修改选项使能表】			
 	for(i=0;i<=option_num;i++){
 		option_enable_list[i]=(cursor_abs_offset==i)?1:0;	//填写选项使能表，在绝对偏移位置上为1，其余位置为0；
@@ -189,8 +189,13 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 	static s8 spin_pos=0;	//旋钮位置
 	double dat_step=0;
 
-	s32 *v_l=NULL;			//指针使用前赋值
-	double *v_f=NULL;		//指针使用前赋值
+	s8		*v_i8=NULL;
+	u8		*v_u8=NULL;
+	s16		*v_i16=NULL;
+	s32		*v_i32=NULL;
+	float 	*v_f16=NULL;
+	double	*v_f32=NULL;
+
 	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【参数过滤】
 	if(max<min)
@@ -203,9 +208,13 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 //--------【参数准备】
 	switch(type)
 	{
-		case DECIMAL: v_f=(double *)value; break; //小数
-		case INTEGRAL:;			   //整数
-		default:v_l=(s32 *)value;  //其他默认做整数处理（待扩展）
+		case INT8:	v_i8=(s8 *)value;break;
+		case UINT8:	v_u8=(u8 *)value;break;  
+		case INT32: v_i32=(s32 *)value; break;
+		case FLT16: v_f16=(float *)value; break;
+		case FLT32: v_f32=(double *)value; break;
+		case INT16: ;	
+		default:	v_i16=(s16 *)value; break;
 	}
 //--------【计算显示行】
 	if(True==_OptionsDisplay_Judge(USN))
@@ -224,13 +233,29 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 
 				if(cur_key==SOLGUI_KEY_UP)														//数值加步进
 				{
-					if(type==DECIMAL) { if(((*v_f)+dat_step)<=max) (*v_f)+=dat_step; }			//小数	
-					else { if(((*v_l)+(s32)dat_step)<=(s32)max) (*v_l)+=(s32)dat_step; }	 	//整数		
+					switch(type)
+					{
+						case INT8:	{if(((*v_i8)+dat_step)<=max)(*v_i8)+=(s8)dat_step;}break;
+						case UINT8:	{if(((*v_u8)+dat_step)<=max)(*v_u8)+=(u8)dat_step;}break;  
+						case INT32: {if(((*v_i32)+dat_step)<=max)(*v_i32)+=(s32)dat_step;}break;
+						case FLT16: {if(((*v_f16)+dat_step)<=max)(*v_f16)+=(float)dat_step;}break;
+						case FLT32: {if(((*v_f32)+dat_step)<=max)(*v_f32)+=(double)dat_step;}break;
+						case INT16: ;	
+						default:	{if(((*v_i16)+dat_step)<=max)(*v_i16)+=(s16)dat_step;}break;
+					}	
 				}
 				else if(cur_key==SOLGUI_KEY_DOWN)												//数值减步进
 				{
-					if(type==DECIMAL) { if(((*v_f)-dat_step)>=min) (*v_f)-=dat_step; }			//小数	
-					else { if(((*v_l)-(s32)dat_step)>=(s32)min) (*v_l)-=(s32)dat_step; }	 	//整数
+					switch(type)
+					{
+						case INT8:	{if(((*v_i8)-dat_step)>=min)(*v_i8)-=(s8)dat_step;}break;
+						case UINT8:	{if(((*v_u8)-dat_step)>=min)(*v_u8)-=(u8)dat_step;}break;  
+						case INT32: {if(((*v_i32)-dat_step)>=min)(*v_i32)-=(s32)dat_step;}break;
+						case FLT16: {if(((*v_f16)-dat_step)>=min)(*v_f16)-=(float)dat_step;}break;
+						case FLT32: {if(((*v_f32)-dat_step)>=min)(*v_f32)-=(double)dat_step;}break;
+						case INT16: ;	
+						default:	{if(((*v_i16)-dat_step)>=min)(*v_i16)-=(s16)dat_step;}break;
+					}	
 				}
 				else if(cur_key==SOLGUI_KEY_LEFT)												//左步进
 				{
@@ -238,14 +263,24 @@ void SOLGUI_Widget_Spin(u8 USN,const u8 *name,u8 type,double max,double min,void
 				}
 				else if(cur_key==SOLGUI_KEY_RIGHT)												//右步进
 				{
-					if(type==DECIMAL) { if(spin_pos>SPIN_DIGIT_MIN) spin_pos--; }	 //小数
+					if((type==FLT16)||(type==FLT32)) { if(spin_pos>SPIN_DIGIT_MIN) spin_pos--; }	 //小数
 					else { if(spin_pos>0) spin_pos--; }		//其他默认做整数处理（待扩展）
 				}
 			}				
 		}
 //--------【选项：变量名&数值绘制】
-		if(type==DECIMAL) SOLGUI_printf(68,y_disp,F6X8,"%f",*v_f);	//数值		
-		else SOLGUI_printf(68,y_disp,F6X8,"%d",*v_l);	//数值						
+		switch(type)
+		{
+			case INT8:	SOLGUI_printf(68,y_disp,F6X8,"%d",*v_i8);break;
+			case UINT8:	SOLGUI_printf(68,y_disp,F6X8,"%d",*v_u8);break; 
+			case INT32: SOLGUI_printf(68,y_disp,F6X8,"%d",*v_i32);break;
+			case FLT16: SOLGUI_printf(68,y_disp,F6X8,"%f",*v_f16);break;
+			case FLT32: SOLGUI_printf(68,y_disp,F6X8,"%f",*v_f32);break;
+			case INT16: ;	
+			default:	SOLGUI_printf(68,y_disp,F6X8,"%d",*v_i16);break;
+		}
+
+								
 //--------【旋钮绘制】
 		if(bit_istrue(SOLGUI_CSR,bit(0))&&(option_enable_list[USN]==1)) 
 		SOLGUI_printf(0,y_disp,~F6X8,"%c%f%c",ICON_LEFT,dat_step,ICON_RIGHT);	   	//如果处于设置模式中，显示旋钮数值
@@ -452,7 +487,7 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑
 //----【在EDIT占用下，显示编辑窗（全屏占用）】
 //----[绘制编辑框]
 			SOLGUI_Clean();					//软清屏
-			GUI_GBasic_Rectangle(0,0,SCREEN_X_WIDTH-1,SCREEN_Y_WIDTH-1,ACTUAL);		//边框
+			SOLGUI_GBasic_Rectangle(0,0,SCREEN_X_WIDTH-1,SCREEN_Y_WIDTH-1,ACTUAL);		//边框
 			SOLGUI_GBasic_Line(0,9,SCREEN_X_WIDTH-1,9,ACTUAL);						//底部的线
 			if(bit_istrue(SOLGUI_CSR,bit(2)))
 			{
@@ -561,13 +596,13 @@ void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 val
 		d=f*xsize;
 		if((mode&0x06)==PROGBAR) 			//进度条
 		{
-			GUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
-			GUI_GBasic_Rectangle(x0,y0,x0+d,y0+ysize,FILL);		
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+d,y0+ysize,FILL);		
 		}
 		else if((mode&0x06)==SCALEBAR)		//刻度
 		{
-			GUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
-			GUI_GBasic_Rectangle(x0,y0,x0+d,y0+ysize,ACTUAL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+d,y0+ysize,ACTUAL);
 			SOLGUI_GBasic_Line(x0,y0+ysize,x0+xsize,y0+ysize,DELETE);
 		}
 	}
@@ -577,13 +612,13 @@ void SOLGUI_Widget_Bar(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,s32 val
 		d=f*ysize;
 		if((mode&0x06)==PROGBAR) 			//进度条
 		{
-			GUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
-			GUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+d,FILL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+d,FILL);
 		}
 		else if((mode&0x06)==SCALEBAR)		//刻度
 		{
-			GUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
-			GUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+d,ACTUAL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
+			SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+d,ACTUAL);
 			SOLGUI_GBasic_Line(x0,y0,x0,y0+ysize,DELETE);
 		}
 	}
@@ -631,7 +666,7 @@ void SOLGUI_Widget_Spectrum(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min,u1
 		y_last=y_now;	
 	}
 //------------【外框绘制】
-	GUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
+	SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
 //------------【零点绘制】
 	if(min<0)
 	{
@@ -656,7 +691,7 @@ void SOLGUI_Widget_Oscillogram(u32 x0,u32 y0,u32 xsize,u32 ysize,s32 max,s32 min
 void SOLGUI_Oscillogram_Probe(WaveMemBlk *wmb,s32 value)									//探针
 {
 	u16 f=0,b=1;
-//--------【数据队列操作】					//这里有改进空间
+//--------【数据队列操作】				
 	for(f=0,b=1;b<wmb->size;f++,b++){
 		wmb->mem[f]=wmb->mem[b];				//数组移位,O(n)
 	}
@@ -677,7 +712,7 @@ void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x
 	u8 m1=0;
 //--------【当前状态】
 	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
-	m1=bit_isfalse(mode,bit(7));
+	m1=bit_isfalse(mode,bit(7));				//是否反白
 //------------【图片直出绘制】
 	if((xsize>=x_len)&&(ysize>=y_len)) 
 		SOLGUI_Pictrue(x0,y0,pic,x_len,y_len,m1);
@@ -696,7 +731,7 @@ void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x
 		}
 	};	
 //-----【边框绘制】
-	if(bit_istrue(mode,bit(6))) GUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
+	if(bit_istrue(mode,bit(6))) SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
 }
 
 #endif

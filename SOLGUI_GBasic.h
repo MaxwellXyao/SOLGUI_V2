@@ -20,9 +20,9 @@
 
 //##############################【API】##############################
 void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode);	//画线（起点，终点，参数）
-void GUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode);		//画矩形（左下角，右上角，参数）
-void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode);		//连续画线（点数组指针，点数，参数）
-void SOLGUI_GBasic_Circle(u32 x0,u32 y0,u32 r,u8 mode);			//画圆（圆心，半径，1点亮0熄灭）
+void SOLGUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode);		//画矩形（左下角，右上角，参数）
+void SOLGUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode);		//连续画线（点数组指针，点数，参数）
+void SOLGUI_GBasic_Circle(u32 x0,u32 y0,u32 r,u8 mode);			//画圆（圆心，半径，参数）
 
 
 #endif

@@ -2,6 +2,27 @@
 
 #if GBASIC_LINE_EN==1||MENU_FRAME_EN==1
 
+
+void _LineModes(s16 x,s16 y,u8 mode,u32 cnt)  		//线型
+{
+	switch(mode&0x03)
+	{
+		case 0:SOLGUI_DrawPoint(x,y,0);break;  			//0擦除线
+		case 2:
+		{
+			if(cnt%2>=1) SOLGUI_DrawPoint(x,y,1); 	//2点线	
+			else	SOLGUI_DrawPoint(x,y,0);break;	
+		}
+		case 3:
+		{
+			if(cnt%4>=2) SOLGUI_DrawPoint(x,y,1);  		//3短划线
+			else	SOLGUI_DrawPoint(x,y,0);break;		
+		}
+		case 1:;										//1实线
+		default:SOLGUI_DrawPoint(x,y,1);	   			
+	}	
+}
+
 void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//画线（mode：0擦除线，1实线，2点线，3短划线）
 {
 	s16 dx=xEnd-x0;
@@ -19,24 +40,7 @@ void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//画线（mode：
 		for(x=x0;x!=xEnd+ux;x+=ux)
 		{
 			cnt++;
-			switch(mode&0x03)
-			{
-				case 0:SOLGUI_DrawPoint(x,y,0);break;  			//0擦除线
-				case 1:
-				{
-					SOLGUI_DrawPoint(x,y,1);break;	   			//1实线
-				}
-				case 2:
-				{
-					if(cnt%2>=1)SOLGUI_DrawPoint(x,y,1); 	//2点线	
-					else	SOLGUI_DrawPoint(x,y,0);break;	
-				}
-				case 3:
-				{
-					if(cnt%4>=2)SOLGUI_DrawPoint(x,y,1);  		//3短划线
-					else	SOLGUI_DrawPoint(x,y,0);break;		
-				}
-			}
+			_LineModes(x,y,mode,cnt);
 			eps+=dy;
 			if((eps<<1)>=dx)
 			{
@@ -50,24 +54,7 @@ void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//画线（mode：
 		for(y=y0;y!=yEnd+uy;y+=uy)
 		{
 			cnt++;
-			switch(mode&0x03)
-			{
-				case 0:SOLGUI_DrawPoint(x,y,0);break;  			//0擦除线
-				case 1:
-				{
-					SOLGUI_DrawPoint(x,y,1);break;	   			//1实线
-				}
-				case 2:
-				{
-					if(cnt%2>=1)SOLGUI_DrawPoint(x,y,1); 		//2点线	
-					else	SOLGUI_DrawPoint(x,y,0);break;	
-				}
-				case 3:
-				{
-					if(cnt%4>=2)SOLGUI_DrawPoint(x,y,1);  		//3短划线
-					else	SOLGUI_DrawPoint(x,y,0);break;		
-				}	
-			}
+			_LineModes(x,y,mode,cnt);
 			eps+=dx;
 			if((eps<<1)>=dy)
 			{
@@ -78,7 +65,7 @@ void SOLGUI_GBasic_Line(u32 x0,u32 y0,u32 xEnd,u32 yEnd,u8 mode)		//画线（mode：
 	}   
 }
 
-void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
+void SOLGUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
 {
 	u32 x0,y0;
 	u32 x1,y1;
@@ -109,7 +96,7 @@ void GUI_GBasic_MultiLine(const u32 *points,u8 num,u8 mode)
 
 #if GBASIC_RECTANGLE_EN==1||MENU_FRAME_EN==1
 
-void  GUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode)		//画矩形（左下角，右上角，模式）
+void  SOLGUI_GBasic_Rectangle(u32 x0,u32 y0,u32 x1,u32 y1,u8 mode)		//画矩形（左下角，右上角，模式）
 {
 	u32 i=0;
 	u8 m=0;
