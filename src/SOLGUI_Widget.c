@@ -731,7 +731,7 @@ void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x
 		}
 	};	
 //-----¡¾±ß¿ò»æÖÆ¡¿
-	if(bit_istrue(mode,bit(6))) SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
+	if(bit_istrue(mode,bit(6))) SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
 }
 
 #endif
