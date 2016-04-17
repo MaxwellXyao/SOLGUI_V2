@@ -302,6 +302,7 @@ void SOLGUI_Widget_OptionText(u8 USN,const u8* str,...)					//选项文本
 	va_list ap;
 	u32 y_disp=0;	//该选项应该显示的行位置
 //	u8 t[SCREEN_X_PAGE-2];		//字符缓存
+	if(bit_istrue(SOLGUI_CSR,bit(1))) return;	//全屏占用
 //--------【参数过滤】
 	if(USN>=OPTIONS_MAX) return;		//USN只允许取0~OPTIONS_MAX-1
 //	_String_LenCtrlCpy(SCREEN_X_PAGE-2,t,(u8 *)str);
@@ -489,13 +490,20 @@ void SOLGUI_Widget_Edit(u8 USN,const u8 *name,u16 char_num,u8 *buf)			//文本编辑
 			SOLGUI_Clean();					//软清屏
 			SOLGUI_GBasic_Rectangle(0,0,SCREEN_X_WIDTH-1,SCREEN_Y_WIDTH-1,ACTUAL);		//边框
 			SOLGUI_GBasic_Line(0,9,SCREEN_X_WIDTH-1,9,ACTUAL);						//底部的线
-			if(bit_istrue(SOLGUI_CSR,bit(2)))
+			if(bit_istrue(SOLGUI_CSR,bit(2)))										//字符编辑状态
 			{
 				edit_buf[buf_i-1]=SOL_ASCII_IME->cluster[SOL_ASCII_IME->finger]->table[SOL_ASCII_IME->cluster[SOL_ASCII_IME->finger]->finger];	//字符串赋值
 				SOLGUI_printf(2,1,F6X8,"%s",SOL_ASCII_IME->cluster[SOL_ASCII_IME->finger]->name);	   //字符簇名
 				SOLGUI_printf(64,1,F6X8,"[ %c ]",SOL_ASCII_IME->cluster[SOL_ASCII_IME->finger]->table[SOL_ASCII_IME->cluster[SOL_ASCII_IME->finger]->finger]);
 			}
-			else SOLGUI_printf(2,1,F6X8,"L:%d C:%d",edit_cursor_col+1,edit_cursor_row+1); //光标位置
+			else if((edit_cursor_col==0)&&(edit_cursor_row==0))		 	//底栏显示
+			{
+				SOLGUI_printf(2,1,F6X8,"BACK");							//光标指向back位置
+			}
+			else
+			{
+				SOLGUI_printf(2,1,F6X8,"L:%d C:%d",edit_cursor_col+1,edit_cursor_row+1); //光标指向可编辑字符位置
+			}
 //----[内容显示]
 			for(i=0;i<(SCREEN_Y_PAGE-3);i++)
 			{
@@ -731,7 +739,7 @@ void SOLGUI_Widget_Picture(u32 x0,u32 y0,u32 xsize,u32 ysize,const u8 *pic,u32 x
 		}
 	};	
 //-----【边框绘制】
-	if(bit_istrue(mode,bit(6))) SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize,y0+ysize,ACTUAL);
+	if(bit_istrue(mode,bit(6))) SOLGUI_GBasic_Rectangle(x0,y0,x0+xsize-1,y0+ysize-1,ACTUAL);
 }
 
 #endif

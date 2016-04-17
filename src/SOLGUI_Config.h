@@ -37,13 +37,13 @@
 #define WIDGET_OPTIONTEXT_EN 	1				//允许使用控件：OptionText选项文本
 #define WIDGET_BUTTON_EN 		1				//允许使用控件：Button按键
 #define WIDGET_SWITCH_EN		1				//允许使用控件：Switch复选开关
-#define WIDGET_EDIT_EN 			0				//允许使用控件：Edit文本编辑
+#define WIDGET_EDIT_EN 			1				//允许使用控件：Edit文本编辑
 										 	
 #define WIDGET_TEXT_EN 			1				//允许使用控件：Text文字
-#define WIDGET_BAR_EN 			0				//允许使用控件：Bar条
-#define WIDGET_SPECTRUM_EN 		0				//允许使用控件：Spectrum谱
-#define WIDGET_OSCILLOGRAM_EN 	0				//允许使用控件：Oscillogram波形
-#define WIDGET_PICTURE_EN		0				//允许使用控件：Picture图
+#define WIDGET_BAR_EN 			1				//允许使用控件：Bar条
+#define WIDGET_SPECTRUM_EN 		1				//允许使用控件：Spectrum谱
+#define WIDGET_OSCILLOGRAM_EN 	1				//允许使用控件：Oscillogram波形
+#define WIDGET_PICTURE_EN		1				//允许使用控件：Picture图
 
 //--------------【选项最大数目】
 #define OPTIONS_MAX				16				//每页最大可以容纳的选项数（不可设置太大）
