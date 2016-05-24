@@ -194,6 +194,7 @@ void __SOLGUI_printf(u32 x,u32 y,u8 mode,const u8* str,va_list arp)		//SOLGUIÄÚ²
 				k*=-1;										//¸ºÊýÖÃµÍÎ»1
 			}
 			kh=(int)k;										//ÕûÊýÐ¡Êý·ÖÀë
+			pow=1;
 			lt=l&7;
 			while((lt-1)>=0){
 				pow*=10;
