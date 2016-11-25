@@ -1,1 +1,1 @@
-һ��ʹ����SOLGUI_V2����Ŀ
+﻿一个使用了SOLGUI_V2的项目
